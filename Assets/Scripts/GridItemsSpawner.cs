@@ -14,8 +14,9 @@ public class GridItemsSpawner : MonoBehaviour
     [SerializeField] private int gridColCount;
     [SerializeField] private float tileSize;
 
-    [SerializeField]
+
     private Vector2 tilePadding = new Vector2(0.15f, 0.15f);
+
     // Start is called before the first frame update
     void Start()
     {
@@ -33,6 +34,8 @@ public class GridItemsSpawner : MonoBehaviour
 
     private void GenerateChildTiles()
     {
+        CalculateTileSize();
+
         //calculate spawn start position, relative to the parent container 
         Vector2 containerPos = tilesContainer.position;
         Vector2 containerLocalScale = tilesContainer.localScale;
@@ -44,16 +47,18 @@ public class GridItemsSpawner : MonoBehaviour
         float tileHalfWidth = tileLocalScale.x / 2f;
         float tileHalfHeight = tileLocalScale.y / 2f;
 
-        //calculate size so as to center all child
-        Vector2 gridTotalSize = new Vector2(tileSize * gridColCount + (gridColCount - 1) * tilePadding.x, tileSize * gridRowCount + (gridRowCount - 1) * tilePadding.y);
-        Vector2 centerOffset = gridTotalSize / -2f;
+        //calculate container size so as to center all child with offset
+        Vector2 gridTotalSize = new Vector2(tileSize * gridColCount + (gridColCount - 1) * tilePadding.x,
+                                             tileSize * gridRowCount + (gridRowCount - 1) * tilePadding.y);
+        Vector2 centerOffset = gridTotalSize / -2f + new Vector2(containerHalfWidth, containerHalfHeight); // Add half container size for proper centering
+
 
         //calculate starting position, relative to container and first tile 
-        Vector2 spawnStartPos = new Vector2(containerPos.x - containerHalfWidth + tileHalfWidth, containerPos.y + containerHalfHeight - tileHalfHeight);
-        //Vector2 spawnStartPos = new Vector2(containerPos.x - containerHalfWidth + tileHalfWidth + centerOffset.x, containerPos.y + containerHalfHeight - tileHalfHeight + centerOffset.y);
+        //Vector2 spawnStartPos = new Vector2(containerPos.x - containerHalfWidth + tileHalfWidth, containerPos.y + containerHalfHeight - tileHalfHeight);
+        Vector2 spawnStartPos = new Vector2(containerPos.x - containerHalfWidth + tileHalfWidth + centerOffset.x,
+                                            containerPos.y + containerHalfHeight - tileHalfHeight - centerOffset.y);
 
-        GameObject tilesParent = new GameObject("TilesParent");
-        tilesParent.transform.parent = tilesContainer.transform;
+
 
         //generate all child tiles
         for (int row = 0; row < gridRowCount; row++)
@@ -62,62 +67,39 @@ public class GridItemsSpawner : MonoBehaviour
             {
                 Vector2 tileNewPos = new Vector2(spawnStartPos.x + (row * (tileSize + tilePadding.x)) , spawnStartPos.y + (col * -(tileSize + tilePadding.y)) );
                 GameObject tileNew = Instantiate(tilePrefab, tileNewPos, Quaternion.identity);
+                tileNew.transform.localScale = new Vector2(tileSize, tileSize);
                 Debug.Log("POarent :" + containerPos + "child pos:" + spawnStartPos);
-                tileNew.transform.parent = tilesParent.transform;
+                tileNew.transform.parent = tilesContainer;
             }
         }
 
-        // Center the tilesParent in the container
-        tilesParent.transform.position = containerPos;
     }
 
-    #region 
-    public void GenerateGrid(int rowCount, int colCount)
+    private void CalculateTileSize()
     {
-       CalculateTileSize(rowCount,colCount);
+        //base sets
+        const float MIN_BASE_TILESIZE_SCALE_FACTOR = 9f;
+        const float MID_BASE_TILESIZE_SCALE_FACTOR = 36f;
+        const float MAX_BASE_TILESIZE_SCALE_FACTOR = 100f;
 
-        // Calculate the total size of the grid
-        float parentWidth =tilesContainer.transform.localScale.x;
-        float parentHeight = tilesContainer.transform.localScale.y;
-
-        // Calculate the total size of the grid
-        float gridWidth = gridColCount * tileSize;
-        float gridHeight = gridRowCount * tileSize;
-
-        // Calculate the starting position to center the grid within the parent
-        float startX = -parentWidth / 2 + gridWidth / 2;
-        float startY = -parentHeight / 2 + gridHeight / 2;
-
-
-        for (int row = 0; row < rowCount; row++)
+        //calculate tile size dynamically, larger tiles for small grid counts, smaller tiles for bigger grid counts
+        float gridSize = gridColCount * gridRowCount;
+        float scaleFactor = 0;
+        //since its always going to be a square matrix, check using row for the scale factor
+        if(gridRowCount <= 5)
         {
-            for (int col = 0; col < colCount; col++)
-            {
-                GameObject tileNew = Instantiate(tilePrefab, tilesContainer);
-                float posX = startX + col * tileSize;
-                float posY = startY +  row * -tileSize;
-                tileNew.transform.position = new Vector2(posX, posY);
-
-                /// Set the size of the tile dynamically
-                tileNew.transform.localScale = new Vector3(tileSize, tileSize, 1.0f);
-            }
+            scaleFactor = Mathf.Clamp(MIN_BASE_TILESIZE_SCALE_FACTOR / gridSize, 0.8f, 2f);
         }
-
-        //position the whole grid at the center
-        //float gridHeight = rowCount * tileSize;
-        //float gridWidth = colCount * tileSize;
-
-        //tilesContainer.transform.position = new Vector2(-gridWidth / 2, gridHeight / 2);
+        else if(gridRowCount <= 10)
+        {
+            scaleFactor = Mathf.Clamp(MID_BASE_TILESIZE_SCALE_FACTOR / gridSize, 0.4f, 0.7f);
+        }
+        else
+        {
+            scaleFactor = Mathf.Clamp(MAX_BASE_TILESIZE_SCALE_FACTOR / gridSize, 0.1f, 0.35f);
+        }
+        
+        tileSize *= scaleFactor;
     }
 
-    private void CalculateTileSize(int rowCount, int colCount)
-    {
-        // Calculate the tile size based on the container's size and grid size
-        float containerWidth = tilesContainer.GetComponent<SpriteRenderer>().bounds.size.x;
-        float containerHeight = tilesContainer.GetComponent<SpriteRenderer>().bounds.size.y;
-
-       tileSize = Mathf.Min(containerWidth / gridRowCount, containerHeight / gridColCount);
-        Debug.Log("Tile size:" + tileSize);
-    }
-    #endregion
 }
