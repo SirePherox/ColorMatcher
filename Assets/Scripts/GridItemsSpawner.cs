@@ -2,12 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[DefaultExecutionOrder(200)] //delayed its execution because it needs to wait for Colors from ColourWheelController
 public class GridItemsSpawner : MonoBehaviour
 {
+    [Header("Script References")]
+    [SerializeField] private ColourWheelController colourWheelController;
+
     [Header("References")]
     [SerializeField] private GameObject tilePrefab;
     [SerializeField] private Transform tilesContainer;
-
+    
 
     [Header("Grid Variable")]
     [SerializeField] private int gridRowCount;
@@ -20,7 +24,7 @@ public class GridItemsSpawner : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        GenerateChildTiles();
     }
 
     // Update is called once per frame
@@ -60,6 +64,8 @@ public class GridItemsSpawner : MonoBehaviour
 
 
 
+        
+        List<Color> UsedTileColors = new List<Color>();
         //generate all child tiles
         for (int row = 0; row < gridRowCount; row++)
         {
@@ -68,10 +74,19 @@ public class GridItemsSpawner : MonoBehaviour
                 Vector2 tileNewPos = new Vector2(spawnStartPos.x + (row * (tileSize + tilePadding.x)) , spawnStartPos.y + (col * -(tileSize + tilePadding.y)) );
                 GameObject tileNew = Instantiate(tilePrefab, tileNewPos, Quaternion.identity);
                 tileNew.transform.localScale = new Vector2(tileSize, tileSize);
-                Debug.Log("POarent :" + containerPos + "child pos:" + spawnStartPos);
                 tileNew.transform.parent = tilesContainer;
+                //update the tile color
+                Color randomColorToUse = colourWheelController.GetRandomTileColor();
+                tileNew.GetComponent<TileManager>().tileColor = randomColorToUse;
+                //save the color used without repetition
+                if (!UsedTileColors.Contains(randomColorToUse))
+                {
+                    UsedTileColors.Add(randomColorToUse);
+                }
             }
         }
+        //update the WheelColors with the colors used by tiles
+        colourWheelController.UpdateColorsOnWheel(UsedTileColors);
 
     }
 
