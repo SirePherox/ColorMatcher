@@ -9,19 +9,17 @@ public class WheelSpinner : MonoBehaviour
     private float currentSpinSpeed;
     [SerializeField] private float deceleration = 5f; // Adjust deceleration rate
     private float currentRotation = 0f;
+    [SerializeField]
     private bool isSpinning = false;
     [SerializeField]  private float timeToNextDirectionChange = 0f;
     [SerializeField] private bool isClockwise = true; // Initial spin direction
     private const float MAX_TIME_TO_CHANGE_DIRECTION = 5.0f;
     private const float MIN_TIME_TO_CHANGE_DIRECTION = 2.0f;
-    private float minRotationSpeed = 0.5f;
-    private float maxRotationSpeed = 3.0f;
 
     //EVENTS
     public event UnityAction OnPlayerStopSpin;
 
     //TEMPORARY SPIN
-    private float currentTempTimer = 0;
     private float defaultTempTimer = 1.0f;
     // Start is called before the first frame update
     void Start()
@@ -36,12 +34,26 @@ public class WheelSpinner : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.S))
         {
-            SpinWheel();
+            if (!GameplayManager.Instance.canStillPlay)
+                return;
+
+            if (isSpinning)
+            {
+                StopSpin();
+            }
+            else
+            {
+                SpinWheel();
+            }
+            
         }
-        if (Input.GetKeyDown(KeyCode.X))
+
+        if (!GameplayManager.Instance.canStillPlay)
         {
+            //stop spin once player cant play 
             StopSpin();
         }
+            
     }
 
     public void SpinWheel()
@@ -51,7 +63,6 @@ public class WheelSpinner : MonoBehaviour
 
     public void StopSpin()
     {
-
         isSpinning = false;
         OnPlayerStopSpin?.Invoke();
         //Gradually decelerate the spin,

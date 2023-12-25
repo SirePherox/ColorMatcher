@@ -11,12 +11,12 @@ public class GridItemsSpawner : MonoBehaviour
     [Header("References")]
     [SerializeField] private GameObject tilePrefab;
     [SerializeField] private Transform tilesContainer;
-    
+    private List<Transform> SpawnedTiles = new List<Transform>();
 
     [Header("Grid Variable")]
     [SerializeField] private int gridRowCount;
     [SerializeField] private int gridColCount;
-    [SerializeField] private float tileSize;
+    private float tileSize = 1;
 
 
     private Vector2 tilePadding = new Vector2(0.15f, 0.15f);
@@ -26,14 +26,18 @@ public class GridItemsSpawner : MonoBehaviour
     {
         GenerateChildTiles();
     }
-
+    private void OnEnable()
+    {
+        GameplayManager.Instance.OnTimeReachZero += CheckGameStateOnTimeOut;
+    }
+    private void OnDisable()
+    {
+        GameplayManager.Instance.OnTimeReachZero -= CheckGameStateOnTimeOut;
+    }
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.A))
-        {
-            GenerateChildTiles();
-        }
+        
     }
 
     private void GenerateChildTiles()
@@ -58,7 +62,6 @@ public class GridItemsSpawner : MonoBehaviour
 
 
         //calculate starting position, relative to container and first tile 
-        //Vector2 spawnStartPos = new Vector2(containerPos.x - containerHalfWidth + tileHalfWidth, containerPos.y + containerHalfHeight - tileHalfHeight);
         Vector2 spawnStartPos = new Vector2(containerPos.x - containerHalfWidth + tileHalfWidth + centerOffset.x,
                                             containerPos.y + containerHalfHeight - tileHalfHeight - centerOffset.y);
 
@@ -75,6 +78,7 @@ public class GridItemsSpawner : MonoBehaviour
                 GameObject tileNew = Instantiate(tilePrefab, tileNewPos, Quaternion.identity);
                 tileNew.transform.localScale = new Vector2(tileSize, tileSize);
                 tileNew.transform.parent = tilesContainer;
+                SpawnedTiles.Add(tileNew.transform); //save to tiles list
                 //update the tile color
                 Color randomColorToUse = colourWheelController.GetRandomTileColor();
                 tileNew.GetComponent<TileManager>().tileColor = randomColorToUse;
@@ -115,6 +119,24 @@ public class GridItemsSpawner : MonoBehaviour
         }
         
         tileSize *= scaleFactor;
+    }
+
+    private void CheckGameStateOnTimeOut()
+    {
+        int totalTileCount = gridColCount * gridRowCount;
+        int scoredTiles = 0;
+        foreach(Transform tileT in SpawnedTiles)
+        {
+            if (!tileT.gameObject.activeSelf)
+            {
+                //if isnt active means it was scored
+                scoredTiles++;
+                
+            }
+        }
+        Debug.Log("Total scored tiles number: " + scoredTiles);
+
+        GameplayManager.Instance.gameSessionWon = GameModeManager.Instance.CheckGameWonState(scoredTiles, totalTileCount);
     }
 
 }

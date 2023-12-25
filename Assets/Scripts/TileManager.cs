@@ -7,8 +7,8 @@ public class TileManager : MonoBehaviour
     [Header("References")]
     [SerializeField] private Transform childColorVisual;
 
-    //[Header("Variables")]
-
+    [Header("Variables")]
+    public int scoreValue = 2;  //points for destroying this tile
     public Color tileColor
     {
         get
@@ -50,9 +50,13 @@ public class TileManager : MonoBehaviour
 
     private void OnMouseDown()
     {
+        if (!GameplayManager.Instance.canStillPlay)
+            return;
+
         if (GameplayManager.Instance.CompareSelectedColor(_tileColor))
         {
             Debug.Log("Color is correct, will set as inactive now");
+            GameplayManager.Instance.UpdateCurrentScore(+scoreValue);
             gameObject.SetActive(false);
         }
         else
