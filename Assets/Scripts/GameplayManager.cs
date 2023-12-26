@@ -8,8 +8,13 @@ public class GameplayManager : SingletonCreator<GameplayManager>
     [Header("GamePlay Variables")]
     [HideInInspector] public bool isTimeZero;
     public bool canStillPlay;
-    public bool gameSessionWon; 
-   
+    public bool gameSessionWon;
+    public bool gameSessionLost;
+
+    //EVENTS
+    public event UnityAction OnWinThisSession;
+    public event UnityAction OnLoseThisSession;
+    private bool hasInvokedOnWinOrLoseThisSessionEvent;
 
     [Header("Color Picker Variables")]
     private Color _currentlyPickedColor;
@@ -40,23 +45,49 @@ public class GameplayManager : SingletonCreator<GameplayManager>
 
     [Header("Timer Variables")]
     [HideInInspector] public float gameplayTimeFraction; //this is the value used to update time slider on UI
+    [HideInInspector] public bool hasFinishedBeforeTimeUp; //has the player scored all tiles before time run out
     //EVENTS
     public event UnityAction OnTimeReachZero;
     private bool hasInvokeOnTimeReachZeroEvent;
 
+
+    [Header("Level Variables")]
+    private int _currentLevel;
+    public int level
+    {
+        get
+        {
+            return _currentLevel;
+        }
+    }
+    public int finalSessionScore;
+    
     // Start is called before the first frame update
     void Start()
     {
         canStillPlay = true;
         hasInvokeOnTimeReachZeroEvent = false;
+        hasInvokedOnWinOrLoseThisSessionEvent = false;
+
+
+        //Get Current Level
+        _currentLevel = PlayerPrefs.GetInt(GamePrefabsNames.CURRENT_LEVEL, 1);
     }
 
+    private void OnEnable()
+    {
+        OnWinThisSession += IncreaseLevelNumber;
+    }
+    private void OnDisable()
+    {
+        //OnWinThisSession -= IncreaseLevelNumber;
+    }
     // Update is called once per frame
     void Update()
     {
         UpdateGameState();
     }
-
+    #region -Color Codes-
     private void SetCurrentlyPickedColor(Color color)
     {
         _currentlyPickedColor = color;
@@ -71,6 +102,29 @@ public class GameplayManager : SingletonCreator<GameplayManager>
     {
         return colorToCompare == _currentlyPickedColor;
     }
+    #endregion
+
+    #region -Level Codes-
+    public void InvokeLevelWonOrLostEvents()
+    {
+         //invoke event once game win or lost
+            if (gameSessionWon)
+            {
+                OnWinThisSession?.Invoke();
+            }
+            if (gameSessionLost)
+            {
+                OnLoseThisSession?.Invoke();
+            }
+    }
+
+    private void IncreaseLevelNumber()
+    {
+        int currentLvl = PlayerPrefs.GetInt(GamePrefabsNames.CURRENT_LEVEL, 1);
+        _currentLevel = currentLvl + 1;
+        PlayerPrefs.SetInt(GamePrefabsNames.CURRENT_LEVEL, _currentLevel);
+    }
+    #endregion
 
     /// <summary>
     /// amountToUpdateWith, can be positive for adding score, or negative for subtraction 
@@ -95,5 +149,12 @@ public class GameplayManager : SingletonCreator<GameplayManager>
                 hasInvokeOnTimeReachZeroEvent = true;
             }
         }
+    }
+
+    private void ResetOnAnotherLevelLoad()
+    {
+        hasInvokeOnTimeReachZeroEvent = false;
+        hasInvokedOnWinOrLoseThisSessionEvent = false;
+        hasFinishedBeforeTimeUp = false;
     }
 }

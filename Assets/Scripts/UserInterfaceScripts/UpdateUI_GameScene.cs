@@ -12,7 +12,9 @@ public class UpdateUI_GameScene : MonoBehaviour
 
     [Header("Timer Variables")]
     [SerializeField] private Slider timerSlider;
- 
+
+    [Header("Level Variables")]
+    [SerializeField] private Transform winOrLoseObject;
     // Start is called before the first frame update
     void Start()
     {
@@ -21,10 +23,14 @@ public class UpdateUI_GameScene : MonoBehaviour
     private void OnEnable()
     {
         GameplayManager.Instance.OnScoreChange += UpdateUIOnScoreChange;
+        GameplayManager.Instance.OnWinThisSession += UpdateUIOnSessionWon;
+        GameplayManager.Instance.OnLoseThisSession += UpdateUIOnSessionLost;
     }
     private void OnDisable()
     {
         GameplayManager.Instance.OnScoreChange -= UpdateUIOnScoreChange;
+        GameplayManager.Instance.OnWinThisSession -= UpdateUIOnSessionWon;
+        GameplayManager.Instance.OnLoseThisSession -= UpdateUIOnSessionLost;
     }
     // Update is called once per frame
     void Update()
@@ -40,5 +46,22 @@ public class UpdateUI_GameScene : MonoBehaviour
     private void UpdateTimerSlider()
     {
         timerSlider.value = GameplayManager.Instance.gameplayTimeFraction;
+    }
+
+    private void UpdateUIOnSessionLost()
+    {
+        if(winOrLoseObject.GetComponent<WinOrLoseTextController>() != null)
+        {
+            winOrLoseObject.GetComponent<WinOrLoseTextController>().ShowOnLose();
+  
+        }
+    }
+
+    private void UpdateUIOnSessionWon()
+    {
+        if (winOrLoseObject.GetComponent<WinOrLoseTextController>() != null)
+        {
+            winOrLoseObject.GetComponent<WinOrLoseTextController>().ShowOnWin();
+        }
     }
 }

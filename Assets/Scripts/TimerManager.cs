@@ -6,9 +6,8 @@ using UnityEngine.Events;
 public class TimerManager : MonoBehaviour
 {
     [Header("Time Variables")]
-    [SerializeField] private float defaultTime = 30.0f;
-    [SerializeField]
-    private float currentTime;
+    public float defaultTime = 30.0f;
+    [HideInInspector] public float currentTime;
     [SerializeField]
     private bool startCountDown;
 
@@ -38,13 +37,18 @@ public class TimerManager : MonoBehaviour
     {
         if (startCountDown)
         {
-            currentTime -= Time.deltaTime;
-            if(currentTime <= 0f)
+            //stop countdown if player should score all tiles
+            if (!GameplayManager.Instance.hasFinishedBeforeTimeUp)
             {
-                currentTime = 0.0f;
-                GameplayManager.Instance.isTimeZero = true;
-                
+                currentTime -= Time.deltaTime;
+                if (currentTime <= 0f)
+                {
+                    currentTime = 0.0f;
+                    GameplayManager.Instance.isTimeZero = true;
+
+                }
             }
+          
         }
     }
 

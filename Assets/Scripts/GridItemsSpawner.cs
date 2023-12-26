@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 [DefaultExecutionOrder(200)] //delayed its execution because it needs to wait for Colors from ColourWheelController
 public class GridItemsSpawner : MonoBehaviour
@@ -17,10 +18,9 @@ public class GridItemsSpawner : MonoBehaviour
     [SerializeField] private int gridRowCount;
     [SerializeField] private int gridColCount;
     private float tileSize = 1;
-
-
     private Vector2 tilePadding = new Vector2(0.15f, 0.15f);
-
+    //EVENTS
+    private bool hasCheckedGameState = false;
     // Start is called before the first frame update
     void Start()
     {
@@ -37,7 +37,7 @@ public class GridItemsSpawner : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        CheckGameStateOnAllTilesScored();
     }
 
     private void GenerateChildTiles()
@@ -136,7 +136,45 @@ public class GridItemsSpawner : MonoBehaviour
         }
         Debug.Log("Total scored tiles number: " + scoredTiles);
 
-        GameplayManager.Instance.gameSessionWon = GameModeManager.Instance.CheckGameWonState(scoredTiles, totalTileCount);
+        bool gameWon;
+        gameWon = GameModeManager.Instance.CheckGameWonOrLostState(scoredTiles, totalTileCount);
+        GameplayManager.Instance.gameSessionWon = gameWon;
+        GameplayManager.Instance.gameSessionLost = !gameWon;
+        //after updatating game state, call the respective events
+        GameplayManager.Instance.InvokeLevelWonOrLostEvents();
+    }
+   
+    private void CheckGameStateOnAllTilesScored()
+    {
+        if (IsAllTilesScored())
+        {
+            if (!hasCheckedGameState)
+            {
+                GameplayManager.Instance.hasFinishedBeforeTimeUp = true;
+                //check game state when all tiles are scored
+                CheckGameStateOnTimeOut();
+                hasCheckedGameState = true;
+            }
+        }
     }
 
+    private bool IsAllTilesScored()
+    {
+        bool allTilesScored = true;
+        foreach (Transform tileT in SpawnedTiles)
+        {
+            if (tileT.gameObject.activeSelf)
+            {
+                //if is active means it hasnt scored
+                allTilesScored = false;
+
+            }
+        }
+        return allTilesScored;
+    }
+
+    private void ResetOnNewLevelLoad()
+    {
+        hasCheckedGameState = false;
+    }
 }

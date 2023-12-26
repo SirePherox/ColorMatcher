@@ -9,6 +9,7 @@ public class TileManager : MonoBehaviour
 
     [Header("Variables")]
     public int scoreValue = 2;  //points for destroying this tile
+    public int loseValue = 1; //points subtracted for clicking when it isnt correct
     public Color tileColor
     {
         get
@@ -55,12 +56,12 @@ public class TileManager : MonoBehaviour
 
         if (GameplayManager.Instance.CompareSelectedColor(_tileColor))
         {
-            Debug.Log("Color is correct, will set as inactive now");
             GameplayManager.Instance.UpdateCurrentScore(+scoreValue);
             gameObject.SetActive(false);
         }
         else
         {
+            GameplayManager.Instance.UpdateCurrentScore(-loseValue);
             Debug.Log("Color isnt correct......");
         }
         
