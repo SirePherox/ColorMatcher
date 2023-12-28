@@ -8,7 +8,7 @@ public class GameModeManager : SingletonCreator<GameModeManager>
     [SerializeField] private TimerManager timeManager;
 
     [Header("GameMode Variables")]
-    public GamePlayMode gameMode = GamePlayMode.QuickRush;
+    public GamePlayMode currentGameMode = GamePlayMode.QuickRush;
     public int finalScore;
     private int scoreMultiplier = 10;
     public enum GamePlayMode
@@ -35,12 +35,12 @@ public class GameModeManager : SingletonCreator<GameModeManager>
     {
         bool gameWon = false;
 
-        if(gameMode == GamePlayMode.QuickRush)
+        if(currentGameMode == GamePlayMode.QuickRush)
         {
            gameWon =  CheckGameWon_QuickRush( scoredTilesCount, totalTilesCount);
            CalculateTotalScoreWithTime(scoredTilesCount, totalTilesCount);
         }
-        else if(gameMode == GamePlayMode.TimeLapse)
+        else if(currentGameMode == GamePlayMode.TimeLapse)
         {
             gameWon = CheckGameWon_TimeLapse(scoredTilesCount, totalTilesCount);
             CalculateTotalScoreWithTime(scoredTilesCount, totalTilesCount);
@@ -52,16 +52,16 @@ public class GameModeManager : SingletonCreator<GameModeManager>
         return gameWon;
     }
 
-    private void SwitchGameMode()
+    public void SwitchGameMode()
     {
-        if (gameMode == GamePlayMode.QuickRush)
+        if (currentGameMode == GamePlayMode.QuickRush)
         {
-            gameMode = GamePlayMode.TimeLapse;
+            currentGameMode = GamePlayMode.TimeLapse;
             return;
         }
-        if (gameMode == GamePlayMode.TimeLapse)
+        if (currentGameMode == GamePlayMode.TimeLapse)
         {
-            gameMode = GamePlayMode.QuickRush;
+            currentGameMode = GamePlayMode.QuickRush;
             return;
         }
     }
@@ -97,11 +97,11 @@ public class GameModeManager : SingletonCreator<GameModeManager>
     {
         float timeToUSe = 0.0f;
 
-        if (gameMode == GamePlayMode.QuickRush)
+        if (currentGameMode == GamePlayMode.QuickRush)
         {
             timeToUSe = defaultTime;
         }
-        else if (gameMode == GamePlayMode.TimeLapse)
+        else if (currentGameMode == GamePlayMode.TimeLapse)
         {
             timeToUSe = (0.8f * defaultTime);
             Debug.Log("Mode is timelapse: " + timeToUSe);

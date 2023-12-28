@@ -5,16 +5,20 @@ using UnityEngine.Events;
 
 public class GameplayManager : SingletonCreator<GameplayManager>
 {
+    [Header("Script References")]
+    [SerializeField] private GridItemsSpawner gridManager;
+
     [Header("GamePlay Variables")]
     [HideInInspector] public bool isTimeZero;
     public bool canStillPlay;
-    public bool gameSessionWon;
-    public bool gameSessionLost;
+    public bool gameSessionWon; //session simply refers to a single play time, when the player starts a level
+    public bool gameSessionLost; //whether it was won or lost, a session has been played
 
     //EVENTS
     public event UnityAction OnWinThisSession;
     public event UnityAction OnLoseThisSession;
     private bool hasInvokedOnWinOrLoseThisSessionEvent;
+   
 
     [Header("Color Picker Variables")]
     private Color _currentlyPickedColor;
@@ -46,10 +50,15 @@ public class GameplayManager : SingletonCreator<GameplayManager>
     [Header("Timer Variables")]
     [HideInInspector] public float gameplayTimeFraction; //this is the value used to update time slider on UI
     [HideInInspector] public bool hasFinishedBeforeTimeUp; //has the player scored all tiles before time run out
+    [SerializeField]
+    private TimerManager timerManager;
+
     //EVENTS
     public event UnityAction OnTimeReachZero;
+    public event UnityAction OnNewLevelLoad;
+    public event UnityAction OnNewSessionDelayCountdownEvent;
     private bool hasInvokeOnTimeReachZeroEvent;
-
+    private bool hasInvokedDelayResetCountDown;
 
     [Header("Level Variables")]
     private int _currentLevel;
@@ -65,6 +74,8 @@ public class GameplayManager : SingletonCreator<GameplayManager>
     // Start is called before the first frame update
     void Start()
     {
+        CacheScriptReferences();
+
         canStillPlay = true;
         hasInvokeOnTimeReachZeroEvent = false;
         hasInvokedOnWinOrLoseThisSessionEvent = false;
@@ -72,20 +83,37 @@ public class GameplayManager : SingletonCreator<GameplayManager>
 
         //Get Current Level
         _currentLevel = PlayerPrefs.GetInt(GamePrefabsNames.CURRENT_LEVEL, 1);
+
+        
     }
 
+    private void CacheScriptReferences()
+    {
+        gridManager =GameObject.Find(GameObjectNames.GRID_MANAGER).GetComponent<GridItemsSpawner>();
+        if (gridManager == null)
+        {
+            Debug.LogError("COULDNT GET THE GRID MANAGER SCRIPT FROM THIS OBJECT, TRY Attaching the script as a component");
+        }
+        else
+        {
+            Debug.Log("Got the componenet");
+        }
+    }
     private void OnEnable()
     {
         OnWinThisSession += IncreaseLevelNumber;
+        OnNewSessionDelayCountdownEvent += ResetOnNewSessionLoaded;
     }
     private void OnDisable()
     {
         //OnWinThisSession -= IncreaseLevelNumber;
+        //OnNewSessionDelayCountdownEvent -= ResetOnNewSessionLoaded;
     }
     // Update is called once per frame
     void Update()
     {
         UpdateGameState();
+        CheckDelayResetCountdownStatus();
     }
     #region -Color Codes-
     private void SetCurrentlyPickedColor(Color color)
@@ -118,7 +146,7 @@ public class GameplayManager : SingletonCreator<GameplayManager>
             }
     }
 
-    private void IncreaseLevelNumber()
+    public void IncreaseLevelNumber()
     {
         int currentLvl = PlayerPrefs.GetInt(GamePrefabsNames.CURRENT_LEVEL, 1);
         _currentLevel = currentLvl + 1;
@@ -138,7 +166,7 @@ public class GameplayManager : SingletonCreator<GameplayManager>
 
     private void UpdateGameState()
     {
-        canStillPlay = !isTimeZero;
+        canStillPlay = !isTimeZero && !gridManager.IsAllTilesScored() ;
 
         //invoke event once time is zero
         if (!hasInvokeOnTimeReachZeroEvent)
@@ -151,10 +179,40 @@ public class GameplayManager : SingletonCreator<GameplayManager>
         }
     }
 
-    private void ResetOnAnotherLevelLoad()
+    private void CheckDelayResetCountdownStatus()
     {
+        if (hasInvokedDelayResetCountDown)
+            return;
+
+        //once the game ends, a delay timer counts down , once the timer is up,
+        //an event is fired to Reload or Progress to another level
+            if(timerManager.hasDelayResetCountdown == true)
+            {
+                //reset the Grid for the new session
+
+                //call function in grid manager, thats load new session
+                GridItemsSpawner gridSpawner = GameObject.Find(GameObjectNames.GRID_MANAGER).GetComponent<GridItemsSpawner>();
+                if (gridSpawner != null)
+                {
+                    gridSpawner.LoadNextSessionRespectively();
+                }
+                else
+                {
+                    Debug.LogError("COULDNT GET THE GRIDITEMSSPAWNER SCRIPT, ENSURE THERE IS A OBJECT NAMED CORRECTLY AS  REFERENCED IN SCRIPT");
+                }
+
+                //then let other listeners know that a new session has been loadede,
+                OnNewSessionDelayCountdownEvent?.Invoke();
+                hasInvokedDelayResetCountDown = true;
+            }
+    }
+
+    private void ResetOnNewSessionLoaded()
+    {
+        _currentScore = 0;
         hasInvokeOnTimeReachZeroEvent = false;
         hasInvokedOnWinOrLoseThisSessionEvent = false;
         hasFinishedBeforeTimeUp = false;
+        hasInvokedDelayResetCountDown = false;
     }
 }

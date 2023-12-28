@@ -15,22 +15,27 @@ public class UpdateUI_GameScene : MonoBehaviour
 
     [Header("Level Variables")]
     [SerializeField] private Transform winOrLoseObject;
+    [SerializeField] private TextMeshProUGUI levelText;
+
     // Start is called before the first frame update
     void Start()
     {
         scoreText.text = "00";
+        levelText.text = GameplayManager.Instance.level.ToString();
     }
     private void OnEnable()
     {
         GameplayManager.Instance.OnScoreChange += UpdateUIOnScoreChange;
         GameplayManager.Instance.OnWinThisSession += UpdateUIOnSessionWon;
         GameplayManager.Instance.OnLoseThisSession += UpdateUIOnSessionLost;
+        GameplayManager.Instance.OnNewSessionDelayCountdownEvent += UpdateUIOnNewSessionLoaded;
     }
     private void OnDisable()
     {
         GameplayManager.Instance.OnScoreChange -= UpdateUIOnScoreChange;
         GameplayManager.Instance.OnWinThisSession -= UpdateUIOnSessionWon;
         GameplayManager.Instance.OnLoseThisSession -= UpdateUIOnSessionLost;
+        GameplayManager.Instance.OnNewSessionDelayCountdownEvent -= UpdateUIOnNewSessionLoaded;
     }
     // Update is called once per frame
     void Update()
@@ -62,6 +67,17 @@ public class UpdateUI_GameScene : MonoBehaviour
         if (winOrLoseObject.GetComponent<WinOrLoseTextController>() != null)
         {
             winOrLoseObject.GetComponent<WinOrLoseTextController>().ShowOnWin();
+        }
+    }
+
+    private void UpdateUIOnNewSessionLoaded()
+    {
+        scoreText.text = "00";
+        levelText.text = GameplayManager.Instance.level.ToString();
+        if (winOrLoseObject.GetComponent<WinOrLoseTextController>() != null)
+        {
+            winOrLoseObject.GetComponent<WinOrLoseTextController>().ShowOnNewSessionLoaded();
+
         }
     }
 }

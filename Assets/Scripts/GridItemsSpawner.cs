@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using System.Linq;
 
 [DefaultExecutionOrder(200)] //delayed its execution because it needs to wait for Colors from ColourWheelController
 public class GridItemsSpawner : MonoBehaviour
@@ -12,15 +13,19 @@ public class GridItemsSpawner : MonoBehaviour
     [Header("References")]
     [SerializeField] private GameObject tilePrefab;
     [SerializeField] private Transform tilesContainer;
+    [SerializeField]
     private List<Transform> SpawnedTiles = new List<Transform>();
-
+ 
     [Header("Grid Variable")]
     [SerializeField] private int gridRowCount;
     [SerializeField] private int gridColCount;
     private float tileSize = 1;
     private Vector2 tilePadding = new Vector2(0.15f, 0.15f);
-    //EVENTS
-    private bool hasCheckedGameState = false;
+    [SerializeField]
+    private bool hasCheckedGameStateOnAllTilesScored = false;
+
+    [SerializeField]
+    private bool currentSessionWon;
     // Start is called before the first frame update
     void Start()
     {
@@ -29,10 +34,16 @@ public class GridItemsSpawner : MonoBehaviour
     private void OnEnable()
     {
         GameplayManager.Instance.OnTimeReachZero += CheckGameStateOnTimeOut;
+        GameplayManager.Instance.OnNewSessionDelayCountdownEvent += ResetOnNewSessionLoad;
     }
     private void OnDisable()
     {
-        GameplayManager.Instance.OnTimeReachZero -= CheckGameStateOnTimeOut;
+        if(GameplayManager.Instance != null)
+        {
+            GameplayManager.Instance.OnTimeReachZero -= CheckGameStateOnTimeOut;
+            GameplayManager.Instance.OnNewSessionDelayCountdownEvent -= ResetOnNewSessionLoad;
+        }
+
     }
     // Update is called once per frame
     void Update()
@@ -42,6 +53,7 @@ public class GridItemsSpawner : MonoBehaviour
 
     private void GenerateChildTiles()
     {
+        
         CalculateTileSize();
 
         //calculate spawn start position, relative to the parent container 
@@ -67,8 +79,8 @@ public class GridItemsSpawner : MonoBehaviour
 
 
 
-        
         List<Color> UsedTileColors = new List<Color>();
+      
         //generate all child tiles
         for (int row = 0; row < gridRowCount; row++)
         {
@@ -121,6 +133,25 @@ public class GridItemsSpawner : MonoBehaviour
         tileSize *= scaleFactor;
     }
 
+    private void ClearPreviousTiles()
+    {
+        //destroy any previous child,active/inactive, of the tiles container
+        List<Transform> previousTransform = tilesContainer.GetComponentsInChildren<Transform>(true).Skip(1).ToList();
+        // Iterate from the end to avoid index shifting
+        for (int i = previousTransform.Count - 1; i >= 0; i--)
+        {
+
+            GameObject tileObject = previousTransform[i].gameObject;
+            Destroy(tileObject);
+        }
+
+        //clear spawned tiles
+        SpawnedTiles.Clear();
+        SpawnedTiles = new List<Transform>();
+        Debug.Log("Cleared all previous tiles");
+
+    }
+
     private void CheckGameStateOnTimeOut()
     {
         int totalTileCount = gridColCount * gridRowCount;
@@ -136,10 +167,10 @@ public class GridItemsSpawner : MonoBehaviour
         }
         Debug.Log("Total scored tiles number: " + scoredTiles);
 
-        bool gameWon;
-        gameWon = GameModeManager.Instance.CheckGameWonOrLostState(scoredTiles, totalTileCount);
-        GameplayManager.Instance.gameSessionWon = gameWon;
-        GameplayManager.Instance.gameSessionLost = !gameWon;
+       
+        currentSessionWon = GameModeManager.Instance.CheckGameWonOrLostState(scoredTiles, totalTileCount);
+        GameplayManager.Instance.gameSessionWon = currentSessionWon;
+        GameplayManager.Instance.gameSessionLost = !currentSessionWon;
         //after updatating game state, call the respective events
         GameplayManager.Instance.InvokeLevelWonOrLostEvents();
     }
@@ -148,18 +179,26 @@ public class GridItemsSpawner : MonoBehaviour
     {
         if (IsAllTilesScored())
         {
-            if (!hasCheckedGameState)
+            if (!hasCheckedGameStateOnAllTilesScored)
             {
                 GameplayManager.Instance.hasFinishedBeforeTimeUp = true;
                 //check game state when all tiles are scored
                 CheckGameStateOnTimeOut();
-                hasCheckedGameState = true;
+                hasCheckedGameStateOnAllTilesScored = true;
             }
         }
     }
 
-    private bool IsAllTilesScored()
+    public bool IsAllTilesScored()
     {
+        if (SpawnedTiles.Count == 0)
+        {
+            //this check is useful when a new session is been loaded
+            Debug.Log("There was no child");
+            return false;
+        }
+            
+
         bool allTilesScored = true;
         foreach (Transform tileT in SpawnedTiles)
         {
@@ -167,14 +206,81 @@ public class GridItemsSpawner : MonoBehaviour
             {
                 //if is active means it hasnt scored
                 allTilesScored = false;
-
             }
         }
         return allTilesScored;
     }
 
-    private void ResetOnNewLevelLoad()
+    /// <summary>
+    /// Loads the next session based on ,  current game mode and whether its a win or lose for this current session
+    /// </summary>
+    public void LoadNextSessionRespectively()
     {
-        hasCheckedGameState = false;
+        Debug.Log("Attempting to load the next game session");
+        if (!currentSessionWon)
+        {
+            //if this session was lost , simply reload the tiles again
+            Debug.Log("Session Lost, reloading the tiles");
+            ReloadSameTiles();
+        }
+        if (currentSessionWon)
+        {
+            //if this session was won, check the current game mode
+
+            if(GameModeManager.Instance.currentGameMode == GameModeManager.GamePlayMode.QuickRush)
+            {
+                //if the game mode is the first mode, QuickRush, Load the same tile but change the gamemode, increase current level
+                Debug.Log("Changing the game mode to TimeLapse, but reloading the same tiles");
+                //reload same tiles
+                ReloadSameTiles();
+                //then change the current GamePlayMode
+                GameModeManager.Instance.SwitchGameMode();
+                
+            }
+            else if (GameModeManager.Instance.currentGameMode == GameModeManager.GamePlayMode.TimeLapse)
+            {
+                //if the game mode is the second mode, TimeLapse, Change mode and load new tiles , increase current level
+                Debug.Log("Loading neew tiles, and changing mode");
+                //then change the current GamePlayMode
+                GameModeManager.Instance.SwitchGameMode();
+                //load new tiles
+                LoadNewTiles();
+            }
+            else
+            {
+                Debug.LogWarning("DONT KNOW HOW TO HANDLE NEXT SESSION LOADING");
+            }
+
+
+        }
+    }
+
+    private void ReloadSameTiles()
+    {
+        //get the currentSpawned tiles and Re-activate them
+        foreach(Transform tileTransform in SpawnedTiles)
+        {
+            tileTransform.gameObject.SetActive(true);
+            Debug.Log("All tiles were reloaded, and set active");
+        }
+    }
+
+    private void LoadNewTiles()
+    {
+        ClearPreviousTiles();
+        Debug.Log("Loading new tiles......");
+        //generate new colors
+        colourWheelController.GenerateColoursToWheelOnNewSessionLoad();
+        //reset default tilesize
+        tileSize = 1; //1 is the original scalee factor of the square sprite that was creeated
+        //generate new tiles
+        GenerateChildTiles();
+        Debug.Log("Loading new tiles");
+    }
+
+    private void ResetOnNewSessionLoad()
+    {
+        hasCheckedGameStateOnAllTilesScored = false;
+
     }
 }

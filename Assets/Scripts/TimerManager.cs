@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using TMPro;
 
 public class TimerManager : MonoBehaviour
 {
@@ -10,21 +11,46 @@ public class TimerManager : MonoBehaviour
     [HideInInspector] public float currentTime;
     [SerializeField]
     private bool startCountDown;
-
+    [SerializeField] private TextMeshProUGUI delayCountdownText;
+    [HideInInspector] public bool hasDelayResetCountdown;
     //EVENTS
- 
-
+    
+    [Header("Level Variables")]
+    private float defaultLoadLevelTime = 3.0f;
+    [SerializeField]
+    private float currentLoadLevelTime;
+    private float delayTime = 2.0f; //time to wait for player to see the result of current level
+    private float currentdelayTime;
+    private bool canStartDelay;
     // Start is called before the first frame update
     void Start()
     {
         ResetDefaultTimer();
+        canStartDelay = false;
+        currentdelayTime = delayTime;
     }
+    private void OnEnable()
+    {
+        GameplayManager.Instance.OnWinThisSession += StartDelayCountdown;
+        GameplayManager.Instance.OnLoseThisSession += StartDelayCountdown;
+        GameplayManager.Instance.OnNewSessionDelayCountdownEvent += ResetOnNewSessionLoaded;
+    }
+    private void OnDisable()
+    {
+        if(GameplayManager.Instance != null)
+        {
+            GameplayManager.Instance.OnWinThisSession -= StartDelayCountdown;
+            GameplayManager.Instance.OnLoseThisSession -= StartDelayCountdown;
+            GameplayManager.Instance.OnNewSessionDelayCountdownEvent -= ResetOnNewSessionLoaded;
+        }
 
+    }
     // Update is called once per frame
     void Update()
     {
         CountDown();
         UpdateTimeSlider();
+        DelayCountDown_LoadSession();
 
         if (Input.GetKeyDown(KeyCode.Q))
         {
@@ -62,5 +88,46 @@ public class TimerManager : MonoBehaviour
     {
         float value = Mathf.Clamp01(currentTime / defaultTime);
         GameplayManager.Instance.gameplayTimeFraction = value;
+    }
+
+  
+
+    private void StartDelayCountdown()
+    {
+        canStartDelay = true;
+    }
+
+    /// <summary>
+    /// After game session ends, starts a countdown to delay anything happening so player can see the result of current session
+    /// after countdown hits zero, set "hasDelayResetCountdown" to True
+    /// </summary>
+    private void DelayCountDown_LoadSession()
+    {
+        if (canStartDelay)
+        {
+            
+            delayCountdownText.gameObject.SetActive(true);
+            delayCountdownText.text = currentdelayTime.ToString("F1");
+            currentdelayTime -= Time.deltaTime;
+            if(currentdelayTime <= 0.0f)
+            {
+                currentdelayTime = 0.0f;
+
+                hasDelayResetCountdown = true;
+                canStartDelay = false;
+            }
+        }
+        else
+        {
+            delayCountdownText.gameObject.SetActive(false);
+        }
+    }
+
+    private void ResetOnNewSessionLoaded()
+    {
+        currentdelayTime = delayTime;
+        ResetDefaultTimer();
+        startCountDown = false;
+        hasDelayResetCountdown = false;
     }
 }

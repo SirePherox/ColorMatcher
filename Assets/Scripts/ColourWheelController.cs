@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.U2D;
+using System.Linq;
 
 public class ColourWheelController : MonoBehaviour
 {
@@ -32,10 +33,7 @@ public class ColourWheelController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.A))
-        {
-            GenerateColoursToWheel(colourCount);
-        }
+
     }
 
     private void GenerateColoursToWheel(int colorCount)
@@ -60,6 +58,32 @@ public class ColourWheelController : MonoBehaviour
             //since color has been sorted based on used, select the topmost colors from the list
             //the top  most are the ones that were used
             SelectedWheelColors.Add(ColoursList[i]);
+        }
+    }
+
+    public void GenerateColoursToWheelOnNewSessionLoad()
+    {
+        ClearPreviousColors();
+        GenerateColoursToWheel(colourCount);
+    }
+
+    private void ClearPreviousColors()
+    {
+        //clear previous selected colors
+        SelectedWheelColors.Clear();
+        SelectedWheelColors = new List<Color>();
+
+        //reset index for colors
+        currentIndex = 0;
+        colorsUsedIndex = 0;
+
+    //delete previous color segments, while skipping the parent
+    List<Transform> previousColorSegmentTransforms = colorSegmentsParent.GetComponentsInChildren<Transform>().Skip(1).ToList();
+        /// Iterate from the end to avoid index shifting
+        for(int i = previousColorSegmentTransforms.Count -1; i >=0; i--)
+        {
+            GameObject colorObject = previousColorSegmentTransforms[i].gameObject;
+            Destroy(colorObject);
         }
     }
 

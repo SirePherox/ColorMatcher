@@ -21,7 +21,6 @@ public class WinOrLoseTextController : MonoBehaviour
 
     public void ShowOnWin()
     {
-        Debug.Log("This was callwd");
         winOrLoseText.text = "Level Won";
         finalScoreText.text = GameModeManager.Instance.finalScore.ToString();
     }
@@ -32,5 +31,9 @@ public class WinOrLoseTextController : MonoBehaviour
         finalScoreText.text = GameModeManager.Instance.finalScore.ToString();
     }
 
-
+    public void ShowOnNewSessionLoaded()
+    {
+        winOrLoseText.text = "Level Reload";
+        finalScoreText.text = "00";
+    }
 }

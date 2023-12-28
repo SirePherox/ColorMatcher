@@ -20,3 +20,9 @@ public class GamePrefabsNames
 {
     public const string CURRENT_LEVEL = "CURRENT_LEVEL";
 }
+
+public class GameObjectNames
+{
+    public const string GRID_MANAGER = "GridManager"; //object with the GridItemsSpawner script
+    
+}
