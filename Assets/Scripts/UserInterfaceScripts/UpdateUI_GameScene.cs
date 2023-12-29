@@ -21,7 +21,7 @@ public class UpdateUI_GameScene : MonoBehaviour
     void Start()
     {
         scoreText.text = "00";
-        levelText.text = GameplayManager.Instance.level.ToString();
+        levelText.text = "LVL-" + GameplayManager.Instance.level.ToString();
     }
     private void OnEnable()
     {
@@ -73,7 +73,7 @@ public class UpdateUI_GameScene : MonoBehaviour
     private void UpdateUIOnNewSessionLoaded()
     {
         scoreText.text = "00";
-        levelText.text = GameplayManager.Instance.level.ToString();
+        levelText.text = "LVL-" + GameplayManager.Instance.level.ToString();
         if (winOrLoseObject.GetComponent<WinOrLoseTextController>() != null)
         {
             winOrLoseObject.GetComponent<WinOrLoseTextController>().ShowOnNewSessionLoaded();

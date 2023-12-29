@@ -228,7 +228,6 @@ public class GameplayManager : SingletonCreator<GameplayManager>
         if (hasInvokedDelayResetCountDown)
             return;
 
-        Debug.Log("Execution reached here, debug afterwards");
         //once the game ends, a delay timer counts down , once the timer is up,
         //an event is fired to Reload or Progress to another level
             if(timerManager.hasDelayResetCountdown == true)

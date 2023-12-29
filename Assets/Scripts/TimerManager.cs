@@ -12,6 +12,7 @@ public class TimerManager : MonoBehaviour
     [SerializeField]
     private bool startCountDown;
     [SerializeField] private TextMeshProUGUI delayCountdownText;
+    [SerializeField] private GameObject winOrLoseParent; //object should only be seen at the end of each session
     [HideInInspector] public bool hasDelayResetCountdown;
     //EVENTS
     
@@ -19,7 +20,7 @@ public class TimerManager : MonoBehaviour
     private float defaultLoadLevelTime = 3.0f;
     [SerializeField]
     private float currentLoadLevelTime;
-    private float delayTime = 2.0f; //time to wait for player to see the result of current level
+    private float delayTime = 5.0f; //time to wait for player to see the result of current level
     private float currentdelayTime;
     private bool canStartDelay;
     // Start is called before the first frame update
@@ -107,6 +108,7 @@ public class TimerManager : MonoBehaviour
         {
             
             delayCountdownText.gameObject.SetActive(true);
+            winOrLoseParent.gameObject.SetActive(true);
             delayCountdownText.text = currentdelayTime.ToString("F1");
             currentdelayTime -= Time.deltaTime;
             if(currentdelayTime <= 0.0f)
@@ -120,6 +122,7 @@ public class TimerManager : MonoBehaviour
         else
         {
             delayCountdownText.gameObject.SetActive(false);
+            winOrLoseParent.gameObject.SetActive(false);
         }
     }
 

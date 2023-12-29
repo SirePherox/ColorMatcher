@@ -47,7 +47,7 @@ public class ColourPickerController : MonoBehaviour
             {
                 currentPickedColor = hitColor.collider.transform.GetComponent<ColorSegmentController>().segmentColor;
                 GameplayManager.Instance.currentlyPickedColor = currentPickedColor;
-                Color colorFeedback =new Color (currentPickedColor.r, currentPickedColor.g, currentPickedColor.b, 0.07f);
+                Color colorFeedback =new Color (currentPickedColor.r, currentPickedColor.g, currentPickedColor.b);
                 pickerColor_VisualFeedback.GetComponent<SpriteRenderer>().color = colorFeedback;
             }
            

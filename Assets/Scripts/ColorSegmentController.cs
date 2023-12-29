@@ -37,13 +37,13 @@ public class ColorSegmentController : MonoBehaviour
 
     private void GetChildVisualColor()
     {
-        Color color = childColorVisual.GetComponent<SpriteShapeRenderer>().color;
+        Color color = childColorVisual.GetComponent<SpriteRenderer>().color;
         _segmentColor = color;
     }
 
     private void SetChildVisualColor(Color colorToSet)
     {
-        childColorVisual.GetComponent<SpriteShapeRenderer>().color = colorToSet;
+        childColorVisual.GetComponent<SpriteRenderer>().color = colorToSet;
         _segmentColor = colorToSet;
     }
     

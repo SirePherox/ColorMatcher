@@ -21,19 +21,19 @@ public class WinOrLoseTextController : MonoBehaviour
 
     public void ShowOnWin()
     {
-        winOrLoseText.text = "Level Won";
+        winOrLoseText.text = "Yay!, You Won.";
         finalScoreText.text = GameModeManager.Instance.finalScore.ToString();
     }
 
     public void ShowOnLose()
     {
-        winOrLoseText.text = "Level Lost";
+        winOrLoseText.text = "Oops!, You Lost.";
         finalScoreText.text = GameModeManager.Instance.finalScore.ToString();
     }
 
     public void ShowOnNewSessionLoaded()
     {
-        winOrLoseText.text = "Level Reload";
+        winOrLoseText.text = "Loading...";
         finalScoreText.text = "00";
     }
 }
