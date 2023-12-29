@@ -12,7 +12,7 @@ public class ColourWheelController : MonoBehaviour
     [SerializeField] private Transform colorSegmentsParent;
 
     [Header("Variables")]
-    [SerializeField] private int colourCount = 3;
+    [SerializeField] private int colorSegmentCount = 3; //number of color segments on wheel
     [SerializeField] private float colourWheelSize = 1.25f;
 
     [Header("Color Variables")]
@@ -22,12 +22,14 @@ public class ColourWheelController : MonoBehaviour
     private List<Color> SelectedWheelColors = new List<Color>();
     private int currentIndex = 0;
     private int colorsUsedIndex = 0;
+    [SerializeField]
     private List<Transform> ColorSegmentsTransform = new List<Transform>();
     // Start is called before the first frame update
     void Start()
     {
+        GetSessionColorSegmentCount();
         GenerateColours();
-        GenerateColoursToWheel(colourCount);
+        GenerateColoursToWheel(colorSegmentCount);
     }
 
     // Update is called once per frame
@@ -36,12 +38,17 @@ public class ColourWheelController : MonoBehaviour
 
     }
 
+    private void GetSessionColorSegmentCount()
+    {
+        colorSegmentCount = GameplayManager.Instance.CalculateNewSessionColorSegmentCount();
+    }
+
     private void GenerateColoursToWheel(int colorCount)
     {
         float anglePerQuadrant = 360f / colorCount;
         float currentAngle = 0f;
 
-
+        
         for (int i = 0; i < colorCount; i++)
         {
             Vector2 itemPos = GetQuadrantPosition(currentAngle, colourWheelSize);
@@ -63,8 +70,12 @@ public class ColourWheelController : MonoBehaviour
 
     public void GenerateColoursToWheelOnNewSessionLoad()
     {
+        //clear previous colors and segments
         ClearPreviousColors();
-        GenerateColoursToWheel(colourCount);
+        //get the coount of segment for this sessioin
+        GetSessionColorSegmentCount();
+        //create the segments
+        GenerateColoursToWheel(colorSegmentCount);
     }
 
     private void ClearPreviousColors()
@@ -76,6 +87,10 @@ public class ColourWheelController : MonoBehaviour
         //reset index for colors
         currentIndex = 0;
         colorsUsedIndex = 0;
+
+        //clear previous color segments
+        ColorSegmentsTransform.Clear();
+        ColorSegmentsTransform = new List<Transform>();
 
     //delete previous color segments, while skipping the parent
     List<Transform> previousColorSegmentTransforms = colorSegmentsParent.GetComponentsInChildren<Transform>().Skip(1).ToList();

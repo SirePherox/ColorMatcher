@@ -17,7 +17,6 @@ public class GameplayManager : SingletonCreator<GameplayManager>
     //EVENTS
     public event UnityAction OnWinThisSession;
     public event UnityAction OnLoseThisSession;
-    private bool hasInvokedOnWinOrLoseThisSessionEvent;
    
 
     [Header("Color Picker Variables")]
@@ -50,7 +49,6 @@ public class GameplayManager : SingletonCreator<GameplayManager>
     [Header("Timer Variables")]
     [HideInInspector] public float gameplayTimeFraction; //this is the value used to update time slider on UI
     [HideInInspector] public bool hasFinishedBeforeTimeUp; //has the player scored all tiles before time run out
-    [SerializeField]
     private TimerManager timerManager;
 
     //EVENTS
@@ -78,7 +76,7 @@ public class GameplayManager : SingletonCreator<GameplayManager>
 
         canStillPlay = true;
         hasInvokeOnTimeReachZeroEvent = false;
-        hasInvokedOnWinOrLoseThisSessionEvent = false;
+        //hasInvokedOnWinOrLoseThisSessionEvent = false;
 
 
         //Get Current Level
@@ -89,14 +87,26 @@ public class GameplayManager : SingletonCreator<GameplayManager>
 
     private void CacheScriptReferences()
     {
-        gridManager =GameObject.Find(GameObjectNames.GRID_MANAGER).GetComponent<GridItemsSpawner>();
+        //grid manager
+        gridManager =  GameObject.Find(GameObjectNames.GRID_MANAGER).GetComponent<GridItemsSpawner>();
         if (gridManager == null)
         {
             Debug.LogError("COULDNT GET THE GRID MANAGER SCRIPT FROM THIS OBJECT, TRY Attaching the script as a component");
         }
         else
         {
-            Debug.Log("Got the componenet");
+            Debug.Log("Cache the GridManager componenet");
+        }
+
+        //timer manager
+        timerManager  = GameObject.Find(GameObjectNames.TIMER_MANAGER).GetComponent<TimerManager>();
+        if (timerManager == null)
+        {
+            Debug.LogError("COULDNT GET THE TIMER MANAGER SCRIPT FROM THIS OBJECT, TRY Attaching the script as a component");
+        }
+        else
+        {
+            Debug.Log("Got the TimerMAnager componenet");
         }
     }
     private void OnEnable()
@@ -152,6 +162,40 @@ public class GameplayManager : SingletonCreator<GameplayManager>
         _currentLevel = currentLvl + 1;
         PlayerPrefs.SetInt(GamePrefabsNames.CURRENT_LEVEL, _currentLevel);
     }
+
+    public int CalculateNewSessionColorSegmentCount()
+    {
+        int currentLvl = _currentLevel;
+        int newSessionColorCount = 3;
+        if(currentLvl <= 3)
+        {
+            return 3;
+        }else if(currentLvl <= 5)
+        {
+            return 5;
+        }
+        else
+        {
+            return 6;
+        }
+    }
+
+    public int CalculateNewSessionGridCount()
+    {
+        int currentLvl = _currentLevel;
+        if (currentLvl <= 3)
+        {
+            return 3;
+        }
+        else if (currentLvl <= 5)
+        {
+            return 5;
+        }
+        else
+        {
+            return 6;
+        }
+    }
     #endregion
 
     /// <summary>
@@ -184,6 +228,7 @@ public class GameplayManager : SingletonCreator<GameplayManager>
         if (hasInvokedDelayResetCountDown)
             return;
 
+        Debug.Log("Execution reached here, debug afterwards");
         //once the game ends, a delay timer counts down , once the timer is up,
         //an event is fired to Reload or Progress to another level
             if(timerManager.hasDelayResetCountdown == true)
@@ -201,9 +246,10 @@ public class GameplayManager : SingletonCreator<GameplayManager>
                     Debug.LogError("COULDNT GET THE GRIDITEMSSPAWNER SCRIPT, ENSURE THERE IS A OBJECT NAMED CORRECTLY AS  REFERENCED IN SCRIPT");
                 }
 
-                //then let other listeners know that a new session has been loadede,
-                OnNewSessionDelayCountdownEvent?.Invoke();
-                hasInvokedDelayResetCountDown = true;
+            hasInvokedDelayResetCountDown = true;
+            //then let other listeners know that a new session has been loadede,
+            OnNewSessionDelayCountdownEvent?.Invoke();
+               
             }
     }
 
@@ -211,7 +257,7 @@ public class GameplayManager : SingletonCreator<GameplayManager>
     {
         _currentScore = 0;
         hasInvokeOnTimeReachZeroEvent = false;
-        hasInvokedOnWinOrLoseThisSessionEvent = false;
+//        hasInvokedOnWinOrLoseThisSessionEvent = false;
         hasFinishedBeforeTimeUp = false;
         hasInvokedDelayResetCountDown = false;
     }

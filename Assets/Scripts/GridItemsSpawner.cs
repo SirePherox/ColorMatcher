@@ -29,6 +29,7 @@ public class GridItemsSpawner : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        GetSessionGridSize();
         GenerateChildTiles();
     }
     private void OnEnable()
@@ -49,6 +50,13 @@ public class GridItemsSpawner : MonoBehaviour
     void Update()
     {
         CheckGameStateOnAllTilesScored();
+    }
+
+    private void GetSessionGridSize()
+    {
+        //must remain square grid, same value for row and column
+        gridColCount = GameplayManager.Instance.CalculateNewSessionGridCount();
+        gridRowCount = GameplayManager.Instance.CalculateNewSessionGridCount();
     }
 
     private void GenerateChildTiles()
@@ -267,12 +275,14 @@ public class GridItemsSpawner : MonoBehaviour
 
     private void LoadNewTiles()
     {
+
         ClearPreviousTiles();
         Debug.Log("Loading new tiles......");
         //generate new colors
         colourWheelController.GenerateColoursToWheelOnNewSessionLoad();
         //reset default tilesize
         tileSize = 1; //1 is the original scalee factor of the square sprite that was creeated
+        GetSessionGridSize();
         //generate new tiles
         GenerateChildTiles();
         Debug.Log("Loading new tiles");

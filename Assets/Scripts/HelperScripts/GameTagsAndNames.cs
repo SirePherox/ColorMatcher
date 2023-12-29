@@ -24,5 +24,6 @@ public class GamePrefabsNames
 public class GameObjectNames
 {
     public const string GRID_MANAGER = "GridManager"; //object with the GridItemsSpawner script
+    public const string TIMER_MANAGER = "GameManager"; //oobject with the TimerManager Script
     
 }
