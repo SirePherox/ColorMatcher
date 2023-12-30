@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class GameplayManager : SingletonCreator<GameplayManager>
+//[DefaultExecutionOrder(300)]
+public class GameplayManager : MonoBehaviour
 {
     [Header("Script References")]
     [SerializeField] private GridItemsSpawner gridManager;
@@ -13,7 +14,7 @@ public class GameplayManager : SingletonCreator<GameplayManager>
     public bool canStillPlay;
     public bool gameSessionWon; //session simply refers to a single play time, when the player starts a level
     public bool gameSessionLost; //whether it was won or lost, a session has been played
-
+    public bool gamePaused;
     //EVENTS
     public event UnityAction OnWinThisSession;
     public event UnityAction OnLoseThisSession;
@@ -68,11 +69,59 @@ public class GameplayManager : SingletonCreator<GameplayManager>
         }
     }
     public int finalSessionScore;
+
+    #region -Singleton-
+    private static GameplayManager instance;
+    public static GameplayManager Instance
+    {
+        get
+        {
+
+            if (instance == null)
+            {
+                //attempt to search scene
+                instance = GameObject.FindObjectOfType<GameplayManager>();
+                if (instance == null )//&& SceneLoader.Instance.GetCurrentSceneIndex() == SceneIndex.GAME_SCENE)
+                {
+                    //no object with script attached
+                    Debug.LogError("GameplayManager not found in the active scene. Try adding it as component  to a  gameobject"); //Creating a new instance.);
+                }
+                
+            }
+            return instance;
+        }
+    }
+
+    #endregion
+
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            // If there's already an instance, destroy the duplicate
+            Destroy(gameObject);
+            return;
+        }
+            
+
+        Debug.Log("Calling Awake function");
+        CacheScriptReferences();
+    }
+
+    private void OnDestroy()
+    {
+        instance = null;
+    }
+
     
     // Start is called before the first frame update
     void Start()
     {
-        CacheScriptReferences();
+       
 
         canStillPlay = true;
         hasInvokeOnTimeReachZeroEvent = false;
@@ -81,7 +130,7 @@ public class GameplayManager : SingletonCreator<GameplayManager>
 
         //Get Current Level
         _currentLevel = PlayerPrefs.GetInt(GamePrefabsNames.CURRENT_LEVEL, 1);
-
+        Debug.Log("Calling start function");
         
     }
 
@@ -113,11 +162,13 @@ public class GameplayManager : SingletonCreator<GameplayManager>
     {
         OnWinThisSession += IncreaseLevelNumber;
         OnNewSessionDelayCountdownEvent += ResetOnNewSessionLoaded;
+        Debug.Log("Calling enable ...");
     }
     private void OnDisable()
     {
         //OnWinThisSession -= IncreaseLevelNumber;
         //OnNewSessionDelayCountdownEvent -= ResetOnNewSessionLoaded;
+        Debug.Log("Calling disnable ...");
     }
     // Update is called once per frame
     void Update()
@@ -210,7 +261,7 @@ public class GameplayManager : SingletonCreator<GameplayManager>
 
     private void UpdateGameState()
     {
-        canStillPlay = !isTimeZero && !gridManager.IsAllTilesScored() ;
+        canStillPlay = !isTimeZero && !gridManager.IsAllTilesScored() && !gamePaused ;
 
         //invoke event once time is zero
         if (!hasInvokeOnTimeReachZeroEvent)

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GameModeManager : SingletonCreator<GameModeManager>
+public class GameModeManager : MonoBehaviour
 {
     [Header("Time Variables")]
     [SerializeField] private TimerManager timeManager;
@@ -17,7 +17,49 @@ public class GameModeManager : SingletonCreator<GameModeManager>
         TimeLapse, //must take at least 2/3 of total number of tiles
     }
 
+    #region -Singleton-
+    private static GameModeManager instance;
+    public static GameModeManager Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                //attempt to search scene
+                instance = GameObject.FindObjectOfType<GameModeManager>();
+                if (instance == null)
+                {
+                    //no object with script attached
+                    Debug.LogError("GameModeManager not found in the active scene. Creating a new instance.");
+                    GameObject managerO = new GameObject("GameModeManager");
+                    instance = managerO.AddComponent<GameModeManager>();
+                }
+            }
+            return instance;
+        }
+    }
 
+    #endregion
+
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            // If there's already an instance, destroy the duplicate
+            Destroy(gameObject);
+            return;
+        }
+
+    }
+
+    private void OnDestroy()
+    {
+        instance = null;
+    }
     // Start is called before the first frame update
     void Start()
     {

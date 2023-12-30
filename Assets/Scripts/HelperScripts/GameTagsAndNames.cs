@@ -27,3 +27,9 @@ public class GameObjectNames
     public const string TIMER_MANAGER = "GameManager"; //oobject with the TimerManager Script
     
 }
+
+public class SceneIndex
+{
+    public const int MAIN_MENU = 0;
+    public const int GAME_SCENE = 1;
+}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using TMPro;
+using UnityEngine.UI;
 
 public class TimerManager : MonoBehaviour
 {
@@ -12,6 +13,7 @@ public class TimerManager : MonoBehaviour
     [SerializeField]
     private bool startCountDown;
     [SerializeField] private TextMeshProUGUI delayCountdownText;
+    [SerializeField] private Image delayCountDown_img;
     [SerializeField] private GameObject winOrLoseParent; //object should only be seen at the end of each session
     [HideInInspector] public bool hasDelayResetCountdown;
     //EVENTS
@@ -20,7 +22,7 @@ public class TimerManager : MonoBehaviour
     private float defaultLoadLevelTime = 3.0f;
     [SerializeField]
     private float currentLoadLevelTime;
-    private float delayTime = 5.0f; //time to wait for player to see the result of current level
+    private float defaultDelayTime = 5.0f; //time to wait for player to see the result of current level
     private float currentdelayTime;
     private bool canStartDelay;
     // Start is called before the first frame update
@@ -28,7 +30,7 @@ public class TimerManager : MonoBehaviour
     {
         ResetDefaultTimer();
         canStartDelay = false;
-        currentdelayTime = delayTime;
+        currentdelayTime = defaultDelayTime;
     }
     private void OnEnable()
     {
@@ -106,10 +108,14 @@ public class TimerManager : MonoBehaviour
     {
         if (canStartDelay)
         {
-            
-            delayCountdownText.gameObject.SetActive(true);
+
+            //update image
+            delayCountDown_img.gameObject.SetActive(true);
+            float fillAmount = 1.0f - (currentdelayTime / defaultDelayTime);
+            delayCountDown_img.fillAmount = fillAmount;
+
             winOrLoseParent.gameObject.SetActive(true);
-            delayCountdownText.text = currentdelayTime.ToString("F1");
+
             currentdelayTime -= Time.deltaTime;
             if(currentdelayTime <= 0.0f)
             {
@@ -121,14 +127,14 @@ public class TimerManager : MonoBehaviour
         }
         else
         {
-            delayCountdownText.gameObject.SetActive(false);
+            delayCountDown_img.gameObject.SetActive(false);
             winOrLoseParent.gameObject.SetActive(false);
         }
     }
 
     private void ResetOnNewSessionLoaded()
     {
-        currentdelayTime = delayTime;
+        currentdelayTime = defaultDelayTime;
         ResetDefaultTimer();
         startCountDown = false;
         hasDelayResetCountdown = false;
