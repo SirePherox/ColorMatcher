@@ -19,6 +19,7 @@ public class GameTagsAndNames : MonoBehaviour
 public class GamePrefabsNames
 {
     public const string CURRENT_LEVEL = "CURRENT_LEVEL";
+    public const string HIGHSCORE = "HIGH_SCORE";
 }
 
 public class GameObjectNames

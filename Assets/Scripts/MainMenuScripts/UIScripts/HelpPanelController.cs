@@ -21,11 +21,13 @@ public class HelpPanelController : MonoBehaviour
 
     public void OpenPanel()
     {
+        SoundController.Instance.PlayButtonClick();
         animator.SetTrigger("Open");
     }
 
     public void ClosePanel()
     {
+        SoundController.Instance.PlayButtonClick();
         animator.SetTrigger("Close");
     }
 }

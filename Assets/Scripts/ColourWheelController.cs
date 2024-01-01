@@ -16,13 +16,10 @@ public class ColourWheelController : MonoBehaviour
     [SerializeField] private float colourWheelSize = 1.25f;
 
     [Header("Color Variables")]
-    [SerializeField]
     private List<Color> ColoursList = new List<Color>();
-    [SerializeField]
     private List<Color> SelectedWheelColors = new List<Color>();
     private int currentIndex = 0;
     private int colorsUsedIndex = 0;
-    [SerializeField]
     private List<Transform> ColorSegmentsTransform = new List<Transform>();
     // Start is called before the first frame update
     void Start()
@@ -35,7 +32,10 @@ public class ColourWheelController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            ClearPreviousColors();
+        }
     }
 
     private void GetSessionColorSegmentCount()

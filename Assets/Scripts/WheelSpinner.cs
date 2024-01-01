@@ -2,8 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
+
 public class WheelSpinner : MonoBehaviour
 {
+    [Header("References")]
+    [SerializeField] private Button wheelControl_btn;
+
     [Header("Variables")]
     [SerializeField] private float defaultSpinSpeed = 1.0f; 
     private float currentSpinSpeed;
@@ -25,6 +30,7 @@ public class WheelSpinner : MonoBehaviour
     void Start()
     {
         currentSpinSpeed = defaultSpinSpeed; // Reset spin speed
+        wheelControl_btn.onClick.AddListener(ControlWheelWithButton);
     }
 
     // Update is called once per frame
@@ -32,8 +38,17 @@ public class WheelSpinner : MonoBehaviour
     {
         SpinColorWheel();
 
-        if (Input.GetKeyDown(KeyCode.S))
+        if (!GameplayManager.Instance.canStillPlay)
         {
+            //stop spin once player cant play 
+            StopSpin();
+        }
+            
+    }
+
+    private void ControlWheelWithButton()
+    {
+      
             if (!GameplayManager.Instance.canStillPlay)
                 return;
 
@@ -45,17 +60,8 @@ public class WheelSpinner : MonoBehaviour
             {
                 SpinWheel();
             }
-            
-        }
-
-        if (!GameplayManager.Instance.canStillPlay)
-        {
-            //stop spin once player cant play 
-            StopSpin();
-        }
-            
+        
     }
-
     public void SpinWheel()
     {
         isSpinning = true;

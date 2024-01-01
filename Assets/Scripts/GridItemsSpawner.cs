@@ -24,8 +24,9 @@ public class GridItemsSpawner : MonoBehaviour
     [SerializeField]
     private bool hasCheckedGameStateOnAllTilesScored = false;
 
-    [SerializeField]
+
     private bool currentSessionWon;
+    [HideInInspector] public bool isCurrentWinBestScore;
     // Start is called before the first frame update
     void Start()
     {
@@ -176,7 +177,7 @@ public class GridItemsSpawner : MonoBehaviour
         Debug.Log("Total scored tiles number: " + scoredTiles);
 
        
-        currentSessionWon = GameModeManager.Instance.CheckGameWonOrLostState(scoredTiles, totalTileCount);
+        currentSessionWon = GameModeManager.Instance.CheckGameWonOrLostState(scoredTiles, totalTileCount,out isCurrentWinBestScore );
         GameplayManager.Instance.gameSessionWon = currentSessionWon;
         GameplayManager.Instance.gameSessionLost = !currentSessionWon;
         //after updatating game state, call the respective events

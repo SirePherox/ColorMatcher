@@ -303,11 +303,22 @@ public class GameplayManager : MonoBehaviour
             }
     }
 
+    public bool SetHighScore(int score)
+    {
+        //returns true if score is the latest best score
+        bool isNewHighScore = false;
+        int prevHighScore = PlayerPrefs.GetInt(GamePrefabsNames.HIGHSCORE, 0);
+        if(score > prevHighScore)
+        {
+            PlayerPrefs.SetInt(GamePrefabsNames.HIGHSCORE, score);
+            isNewHighScore = true;
+        }
+        return isNewHighScore;
+    }
     private void ResetOnNewSessionLoaded()
     {
         _currentScore = 0;
         hasInvokeOnTimeReachZeroEvent = false;
-//        hasInvokedOnWinOrLoseThisSessionEvent = false;
         hasFinishedBeforeTimeUp = false;
         hasInvokedDelayResetCountDown = false;
     }

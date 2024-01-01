@@ -12,7 +12,6 @@ public class TimerManager : MonoBehaviour
     [HideInInspector] public float currentTime;
     [SerializeField]
     private bool startCountDown;
-    [SerializeField] private TextMeshProUGUI delayCountdownText;
     [SerializeField] private Image delayCountDown_img;
     [SerializeField] private GameObject winOrLoseParent; //object should only be seen at the end of each session
     [HideInInspector] public bool hasDelayResetCountdown;
@@ -55,13 +54,18 @@ public class TimerManager : MonoBehaviour
         UpdateTimeSlider();
         DelayCountDown_LoadSession();
 
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            startCountDown = true;
-            //can sync the button to go inactive based on timereachzero event in gameplaymanager
-        }
+
+        //
+        StartCountdownOnTouch();
     }
 
+    private void StartCountdownOnTouch()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            startCountDown = true;
+        }
+    }
     private void CountDown()
     {
         if (startCountDown)

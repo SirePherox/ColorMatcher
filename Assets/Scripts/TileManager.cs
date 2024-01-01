@@ -56,11 +56,13 @@ public class TileManager : MonoBehaviour
 
         if (GameplayManager.Instance.CompareSelectedColor(_tileColor))
         {
+            SoundController.Instance.PlayScoredTile();
             GameplayManager.Instance.UpdateCurrentScore(+scoreValue);
             gameObject.SetActive(false);
         }
         else
         {
+            SoundController.Instance.PlayWrongTile();
             GameplayManager.Instance.UpdateCurrentScore(-loseValue);
             Debug.Log("Color isnt correct......");
         }

@@ -73,22 +73,23 @@ public class GameModeManager : MonoBehaviour
     }
 
 
-    public bool CheckGameWonOrLostState(int scoredTilesCount, int totalTilesCount)
+    public bool CheckGameWonOrLostState(int scoredTilesCount, int totalTilesCount, out bool isScoreNewBestScore)
     {
         bool gameWon = false;
 
         if(currentGameMode == GamePlayMode.QuickRush)
         {
            gameWon =  CheckGameWon_QuickRush( scoredTilesCount, totalTilesCount);
-           CalculateTotalScoreWithTime(scoredTilesCount, totalTilesCount);
+          isScoreNewBestScore = CalculateTotalScoreWithTime(scoredTilesCount, totalTilesCount);
         }
         else if(currentGameMode == GamePlayMode.TimeLapse)
         {
             gameWon = CheckGameWon_TimeLapse(scoredTilesCount, totalTilesCount);
-            CalculateTotalScoreWithTime(scoredTilesCount, totalTilesCount);
+            isScoreNewBestScore = CalculateTotalScoreWithTime(scoredTilesCount, totalTilesCount);
         }
         else
         {
+            isScoreNewBestScore = false;
             Debug.LogWarning("COULDN'T DETECT VALID GAMEPLAY MODE, TRY SETTING GAMEMODE.QUICKRUSH / TIMELAPSE");
         }
         return gameWon;
@@ -155,8 +156,9 @@ public class GameModeManager : MonoBehaviour
         return timeToUSe;
     }
 
-    private void CalculateTotalScoreWithTime(int scoredTilesCount, int totalTilesCount)
+    private bool CalculateTotalScoreWithTime(int scoredTilesCount, int totalTilesCount)
     {
+        bool isScoreLatestHighscore = false;
         //attempt to get the Timer component from this object
         timeManager = GetComponent<TimerManager>();
         if(timeManager != null)
@@ -170,7 +172,7 @@ public class GameModeManager : MonoBehaviour
 
             // Calculate final score with time bonus
              finalScore = scoredTilesCount * scoreMultiplier + timeScoreBonus; // Adjust base score as needed
-
+            isScoreLatestHighscore = GameplayManager.Instance.SetHighScore(finalScore);
             Debug.Log("Final score: " + finalScore);
 
         }
@@ -178,6 +180,8 @@ public class GameModeManager : MonoBehaviour
         {
             Debug.LogError("COULDNT GET THE TIMEMANAGER COMPONENT FROM THIS OBJECT, Try attaching the TimerManager script");
         }
+
+        return isScoreLatestHighscore;
     }
     #endregion
 }

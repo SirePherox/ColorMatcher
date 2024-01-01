@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class UIManager_MainMenu : MonoBehaviour
 {
@@ -19,7 +20,10 @@ public class UIManager_MainMenu : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private HelpPanelController helpPanel;
+    [SerializeField] private SettingsPanelController settingsPanel;
     [SerializeField] private GameObject LoadingGame_object;
+    [SerializeField] private TextMeshProUGUI highScoreText;
+
 
     // Start is called before the first frame update
     void Start()
@@ -33,9 +37,14 @@ public class UIManager_MainMenu : MonoBehaviour
     {
 
     }
-
+    private void OnEnable()
+    {
+        SoundController.Instance.PlayBackgroundMusic();
+        highScoreText.text = PlayerPrefs.GetInt(GamePrefabsNames.HIGHSCORE, 0).ToString();
+    }
     private void LoadGameScene()
     {
+        SoundController.Instance.PlayButtonClick();
         //show loading screen, scene wont load immediately
         LoadingGame_object.SetActive(true);
         //call load scene async
@@ -44,6 +53,7 @@ public class UIManager_MainMenu : MonoBehaviour
 
     private void ExitGame()
     {
+        SoundController.Instance.PlayButtonClick();
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.ExitPlaymode();
 #endif
@@ -54,6 +64,10 @@ public class UIManager_MainMenu : MonoBehaviour
     {
         showHelpPanel_btn.onClick.AddListener(helpPanel.OpenPanel);
         closeHelpPanel_btn.onClick.AddListener(helpPanel.ClosePanel);
+
+        showSettingsPanel_btn.onClick.AddListener(settingsPanel.OpenPanel);
+        closeSettingsPanel_btn.onClick.AddListener(settingsPanel.ClosePanel);
+
         loadGame_btn.onClick.AddListener(LoadGameScene);
     }
 
