@@ -87,6 +87,13 @@ public class TimerManager : MonoBehaviour
 
     private void ResetDefaultTimer()
     {
+        int currentLvl = PlayerPrefs.GetInt(GamePrefabsNames.CURRENT_LEVEL, 1);
+        //add 2secs after every 5 leevels
+        if (currentLvl >= 4 && currentLvl % 5 == 0)
+        {
+            defaultTime += 2.0f;  // Adjust this value as needed
+        }
+
         currentTime = GameModeManager.Instance.SetTimeBasedOnMode( defaultTime);
         GameplayManager.Instance.isTimeZero = false;
     }

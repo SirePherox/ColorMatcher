@@ -10,13 +10,15 @@ public class WheelSpinner : MonoBehaviour
     [SerializeField] private Button wheelControl_btn;
 
     [Header("Variables")]
-    [SerializeField] private float defaultSpinSpeed = 1.0f; 
+    [SerializeField] private float sessionSpinSpeed = 1.0f; //the spin speed for this session, changes with level
+    private float baseSpinSpeeed = 1.0f;
+    [SerializeField]
     private float currentSpinSpeed;
     [SerializeField] private float deceleration = 5f; // Adjust deceleration rate
     private float currentRotation = 0f;
     [SerializeField]
     private bool isSpinning = false;
-    [SerializeField]  private float timeToNextDirectionChange = 0f;
+    [SerializeField] private float timeToNextDirectionChange = 0f;
     [SerializeField] private bool isClockwise = true; // Initial spin direction
     private const float MAX_TIME_TO_CHANGE_DIRECTION = 5.0f;
     private const float MIN_TIME_TO_CHANGE_DIRECTION = 2.0f;
@@ -29,7 +31,7 @@ public class WheelSpinner : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        currentSpinSpeed = defaultSpinSpeed; // Reset spin speed
+        UpdateSessionSpinSpeed();
         wheelControl_btn.onClick.AddListener(ControlWheelWithButton);
     }
 
@@ -43,24 +45,36 @@ public class WheelSpinner : MonoBehaviour
             //stop spin once player cant play 
             StopSpin();
         }
-            
+
     }
 
+    private void OnEnable()
+    {
+        GameplayManager.Instance.OnNewSessionDelayCountdownEvent += ResetOnNewSessionLoad;
+    }
+
+    private void OnDisable()
+    {
+        if (GameplayManager.Instance != null)
+        {
+            GameplayManager.Instance.OnNewSessionDelayCountdownEvent -= ResetOnNewSessionLoad;
+        }
+    }
     private void ControlWheelWithButton()
     {
-      
-            if (!GameplayManager.Instance.canStillPlay)
-                return;
 
-            if (isSpinning)
-            {
-                StopSpin();
-            }
-            else
-            {
-                SpinWheel();
-            }
-        
+        if (!GameplayManager.Instance.canStillPlay)
+            return;
+
+        if (isSpinning)
+        {
+            StopSpin();
+        }
+        else
+        {
+            SpinWheel();
+        }
+
     }
     public void SpinWheel()
     {
@@ -84,18 +98,15 @@ public class WheelSpinner : MonoBehaviour
         if (isSpinning)
         {
             currentRotation += currentSpinSpeed * Time.deltaTime;
-          //  currentRotation = Mathf.Clamp(currentRotation, minRotationSpeed, maxRotationSpeed);
-          
             transform.Rotate(0f, 0f, currentRotation);
 
-         
             // Check for direction change with timer
             timeToNextDirectionChange -= Time.deltaTime;
             if (timeToNextDirectionChange <= 0f)
             {
                 timeToNextDirectionChange = Random.Range(MIN_TIME_TO_CHANGE_DIRECTION, MAX_TIME_TO_CHANGE_DIRECTION);
                 isClockwise = !isClockwise;
-                currentSpinSpeed = defaultSpinSpeed;
+                currentSpinSpeed = sessionSpinSpeed;
 
                 // Apply direction to spin speed
                 currentSpinSpeed *= isClockwise ? 1f : -1f;
@@ -105,6 +116,17 @@ public class WheelSpinner : MonoBehaviour
         }
     }
 
+    private void ResetOnNewSessionLoad()
+    {
+        UpdateSessionSpinSpeed();
+    }
+
+    private void UpdateSessionSpinSpeed()
+    {
+        int currentLvl = PlayerPrefs.GetInt(GamePrefabsNames.CURRENT_LEVEL, 1);
+        sessionSpinSpeed = baseSpinSpeeed * Mathf.Pow(1.05f, currentLvl);
+        currentSpinSpeed = sessionSpinSpeed;
+    }
     public IEnumerator SpinTemporarily()
     {
         //this is called when the player stops the spin but it doesnt stop on any valid color

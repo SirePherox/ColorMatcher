@@ -16,10 +16,13 @@ public class ColourWheelController : MonoBehaviour
     [SerializeField] private float colourWheelSize = 1.25f;
 
     [Header("Color Variables")]
-    private List<Color> ColoursList = new List<Color>();
-    private List<Color> SelectedWheelColors = new List<Color>();
+    [SerializeField]
+    private List<Color32> ColoursList = new List<Color32>();
+    [SerializeField]
+    private List<Color32> SelectedWheelColors = new List<Color32>();
     private int currentIndex = 0;
     private int colorsUsedIndex = 0;
+    [SerializeField]
     private List<Transform> ColorSegmentsTransform = new List<Transform>();
     // Start is called before the first frame update
     void Start()
@@ -82,7 +85,7 @@ public class ColourWheelController : MonoBehaviour
     {
         //clear previous selected colors
         SelectedWheelColors.Clear();
-        SelectedWheelColors = new List<Color>();
+        SelectedWheelColors = new List<Color32>();
 
         //reset index for colors
         currentIndex = 0;
@@ -119,22 +122,35 @@ public class ColourWheelController : MonoBehaviour
 
     private void GenerateColours()
     {
-        ColoursList.Add(Color.black);
-        ColoursList.Add(Color.blue);
-        ColoursList.Add(Color.white);
-        ColoursList.Add(Color.green);
-        ColoursList.Add(Color.yellow);
+        ColoursList.Add(new Color32(144, 12, 63,255)); //maroon
+        ColoursList.Add(new Color32(199, 0, 57,255)); //rede
+
+        ColoursList.Add(new Color32(248, 222, 34,255)); //yellow
+        ColoursList.Add(new Color32(182, 255, 250, 255)); //mint
+
+        ColoursList.Add(new Color32(39, 0, 93,255)); //navy
+        ColoursList.Add(new Color32(148, 0, 255, 255)); //purple
+        ColoursList.Add(new Color32(166, 255, 150, 255)); //green
+        ColoursList.Add(new Color32(67, 118, 108, 255)); //teal
+        ColoursList.Add(new Color32(177, 148, 112, 255)); //Beige
+        ColoursList.Add(new Color32(118, 69, 59, 255)); //brown
+        ColoursList.Add(new Color32(255, 207, 157, 255)); //peach
+        ColoursList.Add(new Color32(104, 126, 255, 255)); //cold
+        ColoursList.Add(new Color32(35, 45, 63, 255)); //night
+        ColoursList.Add(new Color32(255, 108, 34, 255)); //orange
+        ColoursList.Add(new Color32(252, 233, 241, 255)); //retro
+        ColoursList.Add(new Color32(169, 179, 136, 255)); //sage
     }
 
-    private Color GetRandomColorFromList()
+    private Color32 GetRandomColorFromList()
     {
         //gets a random color , then sort the list so that colors aren't repeated
         int colorCount = ColoursList.Count;
         int randomIndex = Random.Range(currentIndex, colorCount);
 
 
-        Color tempHolder = ColoursList[colorsUsedIndex];
-        Color colorToReturn = ColoursList[randomIndex];
+        Color32 tempHolder = ColoursList[colorsUsedIndex];
+        Color32 colorToReturn = ColoursList[randomIndex];
 
         ColoursList[randomIndex] = tempHolder;
         ColoursList[colorsUsedIndex] = colorToReturn;
@@ -146,7 +162,7 @@ public class ColourWheelController : MonoBehaviour
 
     }
 
-    public Color GetRandomTileColor()
+    public Color32 GetRandomTileColor()
     {
         int colorCount = SelectedWheelColors.Count;
         int randomColorIndex = Random.Range(0, colorCount);
@@ -157,7 +173,7 @@ public class ColourWheelController : MonoBehaviour
     /// Updates the colors that are displayed on the color wheel ,
     /// based on the List<Color> that are used by the available tiles
     /// </summary>
-    public void UpdateColorsOnWheel(List<Color> listOfColors)
+    public void UpdateColorsOnWheel(List<Color32> listOfColors)
     {
         foreach(Transform segmentTransform in ColorSegmentsTransform)
         {

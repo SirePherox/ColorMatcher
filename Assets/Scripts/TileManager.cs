@@ -10,7 +10,7 @@ public class TileManager : MonoBehaviour
     [Header("Variables")]
     public int scoreValue = 2;  //points for destroying this tile
     public int loseValue = 1; //points subtracted for clicking when it isnt correct
-    public Color tileColor
+    public Color32 tileColor
     {
         get
         {
@@ -38,7 +38,7 @@ public class TileManager : MonoBehaviour
 
     private void GetChildVisualColor()
     {
-        Color color = childColorVisual.GetComponent<SpriteRenderer>().color;
+        Color32 color = childColorVisual.GetComponent<SpriteRenderer>().color;
         _tileColor = color;
         Debug.Log("Tile Color gotten is : " + _tileColor);
     }

@@ -18,7 +18,7 @@ public class GameplayManager : MonoBehaviour
     //EVENTS
     public event UnityAction OnWinThisSession;
     public event UnityAction OnLoseThisSession;
-   
+
 
     [Header("Color Picker Variables")]
     private Color _currentlyPickedColor;
@@ -26,7 +26,7 @@ public class GameplayManager : MonoBehaviour
     {
         get
         {
-            
+
             return _currentlyPickedColor;
         }
         set
@@ -81,12 +81,12 @@ public class GameplayManager : MonoBehaviour
             {
                 //attempt to search scene
                 instance = GameObject.FindObjectOfType<GameplayManager>();
-                if (instance == null )//&& SceneLoader.Instance.GetCurrentSceneIndex() == SceneIndex.GAME_SCENE)
+                if (instance == null)//&& SceneLoader.Instance.GetCurrentSceneIndex() == SceneIndex.GAME_SCENE)
                 {
                     //no object with script attached
                     Debug.LogError("GameplayManager not found in the active scene. Try adding it as component  to a  gameobject"); //Creating a new instance.);
                 }
-                
+
             }
             return instance;
         }
@@ -106,7 +106,7 @@ public class GameplayManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-            
+
 
         Debug.Log("Calling Awake function");
         CacheScriptReferences();
@@ -117,11 +117,11 @@ public class GameplayManager : MonoBehaviour
         instance = null;
     }
 
-    
+
     // Start is called before the first frame update
     void Start()
     {
-       
+
 
         canStillPlay = true;
         hasInvokeOnTimeReachZeroEvent = false;
@@ -131,13 +131,13 @@ public class GameplayManager : MonoBehaviour
         //Get Current Level
         _currentLevel = PlayerPrefs.GetInt(GamePrefabsNames.CURRENT_LEVEL, 1);
         Debug.Log("Calling start function");
-        
+
     }
 
     private void CacheScriptReferences()
     {
         //grid manager
-        gridManager =  GameObject.Find(GameObjectNames.GRID_MANAGER).GetComponent<GridItemsSpawner>();
+        gridManager = GameObject.Find(GameObjectNames.GRID_MANAGER).GetComponent<GridItemsSpawner>();
         if (gridManager == null)
         {
             Debug.LogError("COULDNT GET THE GRID MANAGER SCRIPT FROM THIS OBJECT, TRY Attaching the script as a component");
@@ -148,7 +148,7 @@ public class GameplayManager : MonoBehaviour
         }
 
         //timer manager
-        timerManager  = GameObject.Find(GameObjectNames.TIMER_MANAGER).GetComponent<TimerManager>();
+        timerManager = GameObject.Find(GameObjectNames.TIMER_MANAGER).GetComponent<TimerManager>();
         if (timerManager == null)
         {
             Debug.LogError("COULDNT GET THE TIMER MANAGER SCRIPT FROM THIS OBJECT, TRY Attaching the script as a component");
@@ -196,15 +196,15 @@ public class GameplayManager : MonoBehaviour
     #region -Level Codes-
     public void InvokeLevelWonOrLostEvents()
     {
-         //invoke event once game win or lost
-            if (gameSessionWon)
-            {
-                OnWinThisSession?.Invoke();
-            }
-            if (gameSessionLost)
-            {
-                OnLoseThisSession?.Invoke();
-            }
+        //invoke event once game win or lost
+        if (gameSessionWon)
+        {
+            OnWinThisSession?.Invoke();
+        }
+        if (gameSessionLost)
+        {
+            OnLoseThisSession?.Invoke();
+        }
     }
 
     public void IncreaseLevelNumber()
@@ -216,36 +216,39 @@ public class GameplayManager : MonoBehaviour
 
     public int CalculateNewSessionColorSegmentCount()
     {
-        int currentLvl = _currentLevel;
-        int newSessionColorCount = 3;
-        if(currentLvl <= 3)
+        const int MAX_COLOR_SEGMENT = 7;
+        //set for the first 4 levels , then calculatee the others
+        int currentLvl = PlayerPrefs.GetInt(GamePrefabsNames.CURRENT_LEVEL, 1);
+        if (currentLvl <= 4)
         {
             return 3;
-        }else if(currentLvl <= 5)
-        {
-            return 5;
         }
         else
         {
-            return 6;
+            return Mathf.RoundToInt(Mathf.Min(3 + Mathf.Floor(_currentLevel / 5), MAX_COLOR_SEGMENT));
+
         }
+
     }
 
     public int CalculateNewSessionGridCount()
     {
-        int currentLvl = _currentLevel;
-        if (currentLvl <= 3)
+        const int MAX_GRID_COUNT = 10;
+        //set for the first 4 levels , then calculatee the others
+        int currentLvl = PlayerPrefs.GetInt(GamePrefabsNames.CURRENT_LEVEL, 1);
+        if (currentLvl <= 2)
+        {
+            return 2;
+        }
+        else if (currentLvl <= 4)
         {
             return 3;
         }
-        else if (currentLvl <= 5)
-        {
-            return 5;
-        }
         else
         {
-            return 6;
+            return Mathf.RoundToInt(Mathf.Min(4 + Mathf.Floor(_currentLevel / 10), MAX_GRID_COUNT));
         }
+
     }
     #endregion
 
@@ -261,7 +264,7 @@ public class GameplayManager : MonoBehaviour
 
     private void UpdateGameState()
     {
-        canStillPlay = !isTimeZero && !gridManager.IsAllTilesScored() && !gamePaused ;
+        canStillPlay = !isTimeZero && !gridManager.IsAllTilesScored() && !gamePaused;
 
         //invoke event once time is zero
         if (!hasInvokeOnTimeReachZeroEvent)
@@ -281,26 +284,26 @@ public class GameplayManager : MonoBehaviour
 
         //once the game ends, a delay timer counts down , once the timer is up,
         //an event is fired to Reload or Progress to another level
-            if(timerManager.hasDelayResetCountdown == true)
-            {
-                //reset the Grid for the new session
+        if (timerManager.hasDelayResetCountdown == true)
+        {
+            //reset the Grid for the new session
 
-                //call function in grid manager, thats load new session
-                GridItemsSpawner gridSpawner = GameObject.Find(GameObjectNames.GRID_MANAGER).GetComponent<GridItemsSpawner>();
-                if (gridSpawner != null)
-                {
-                    gridSpawner.LoadNextSessionRespectively();
-                }
-                else
-                {
-                    Debug.LogError("COULDNT GET THE GRIDITEMSSPAWNER SCRIPT, ENSURE THERE IS A OBJECT NAMED CORRECTLY AS  REFERENCED IN SCRIPT");
-                }
+            //call function in grid manager, thats load new session
+            GridItemsSpawner gridSpawner = GameObject.Find(GameObjectNames.GRID_MANAGER).GetComponent<GridItemsSpawner>();
+            if (gridSpawner != null)
+            {
+                gridSpawner.LoadNextSessionRespectively();
+            }
+            else
+            {
+                Debug.LogError("COULDNT GET THE GRIDITEMSSPAWNER SCRIPT, ENSURE THERE IS A OBJECT NAMED CORRECTLY AS  REFERENCED IN SCRIPT");
+            }
 
             hasInvokedDelayResetCountDown = true;
             //then let other listeners know that a new session has been loadede,
             OnNewSessionDelayCountdownEvent?.Invoke();
-               
-            }
+
+        }
     }
 
     public bool SetHighScore(int score)
@@ -308,7 +311,7 @@ public class GameplayManager : MonoBehaviour
         //returns true if score is the latest best score
         bool isNewHighScore = false;
         int prevHighScore = PlayerPrefs.GetInt(GamePrefabsNames.HIGHSCORE, 0);
-        if(score > prevHighScore)
+        if (score > prevHighScore)
         {
             PlayerPrefs.SetInt(GamePrefabsNames.HIGHSCORE, score);
             isNewHighScore = true;

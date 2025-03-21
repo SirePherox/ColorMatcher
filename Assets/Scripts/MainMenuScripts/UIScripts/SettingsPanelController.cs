@@ -69,12 +69,32 @@ public class SettingsPanelController : MonoBehaviour
     {
         isMusicMuted = !isMusicMuted;
         musicMutedIcon.SetActive(isMusicMuted);
+
+        //update effects in sound controller
+        if (isMusicMuted)
+        {
+            SoundController.Instance.MuteBGMusic();
+        }
+        else
+        {
+            SoundController.Instance.UnmuteBGMusic();
+        }
     }
 
     private void UpdateSoundEffectMutedStatus()
     {
         isSoundEffectMuted = !isSoundEffectMuted;
         soundEffectsMutedIcon.SetActive(isSoundEffectMuted);
+
+        //update effects in sound controller
+        if (isSoundEffectMuted)
+        {
+            SoundController.Instance.MuteSoundEffects();
+        }
+        else
+        {
+            SoundController.Instance.UnmuteSoundEffects();
+        }
     }
 
     private void ResetGameProgress()

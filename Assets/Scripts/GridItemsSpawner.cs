@@ -15,13 +15,14 @@ public class GridItemsSpawner : MonoBehaviour
     [SerializeField] private Transform tilesContainer;
     [SerializeField]
     private List<Transform> SpawnedTiles = new List<Transform>();
- 
+
     [Header("Grid Variable")]
     [SerializeField] private int gridRowCount;
     [SerializeField] private int gridColCount;
-    private float tileSize = 1;
-    private Vector2 tilePadding = new Vector2(0.15f, 0.15f);
     [SerializeField]
+    private float tileSize = 1;
+    [SerializeField]
+    private Vector2 tilePadding = new Vector2(0.15f, 0.15f);
     private bool hasCheckedGameStateOnAllTilesScored = false;
 
 
@@ -40,7 +41,7 @@ public class GridItemsSpawner : MonoBehaviour
     }
     private void OnDisable()
     {
-        if(GameplayManager.Instance != null)
+        if (GameplayManager.Instance != null)
         {
             GameplayManager.Instance.OnTimeReachZero -= CheckGameStateOnTimeOut;
             GameplayManager.Instance.OnNewSessionDelayCountdownEvent -= ResetOnNewSessionLoad;
@@ -62,7 +63,7 @@ public class GridItemsSpawner : MonoBehaviour
 
     private void GenerateChildTiles()
     {
-        
+
         CalculateTileSize();
 
         //calculate spawn start position, relative to the parent container 
@@ -88,20 +89,22 @@ public class GridItemsSpawner : MonoBehaviour
 
 
 
-        List<Color> UsedTileColors = new List<Color>();
-      
+        List<Color32> UsedTileColors = new List<Color32>();
+
         //generate all child tiles
         for (int row = 0; row < gridRowCount; row++)
         {
-            for(int col = 0; col < gridColCount; col++)
+            for (int col = 0; col < gridColCount; col++)
             {
-                Vector2 tileNewPos = new Vector2(spawnStartPos.x + (row * (tileSize + tilePadding.x)) , spawnStartPos.y + (col * -(tileSize + tilePadding.y)) );
+                // Vector2 tileNewPos = new Vector2(spawnStartPos.x + (row * (tileSize + tilePadding.x)),
+                // spawnStartPos.y + (col * -(tileSize + tilePadding.y)));
+                Vector2 tileNewPos = new Vector2(spawnStartPos.x + (row * (tileSize + tilePadding.x)), spawnStartPos.y + (col * -(tileSize + tilePadding.y)));
                 GameObject tileNew = Instantiate(tilePrefab, tileNewPos, Quaternion.identity);
                 tileNew.transform.localScale = new Vector2(tileSize, tileSize);
                 tileNew.transform.parent = tilesContainer;
                 SpawnedTiles.Add(tileNew.transform); //save to tiles list
                 //update the tile color
-                Color randomColorToUse = colourWheelController.GetRandomTileColor();
+                Color32 randomColorToUse = colourWheelController.GetRandomTileColor();
                 tileNew.GetComponent<TileManager>().tileColor = randomColorToUse;
                 //save the color used without repetition
                 if (!UsedTileColors.Contains(randomColorToUse))
@@ -117,29 +120,39 @@ public class GridItemsSpawner : MonoBehaviour
 
     private void CalculateTileSize()
     {
-        //base sets
-        const float MIN_BASE_TILESIZE_SCALE_FACTOR = 9f;
-        const float MID_BASE_TILESIZE_SCALE_FACTOR = 36f;
-        const float MAX_BASE_TILESIZE_SCALE_FACTOR = 100f;
-
-        //calculate tile size dynamically, larger tiles for small grid counts, smaller tiles for bigger grid counts
-        float gridSize = gridColCount * gridRowCount;
-        float scaleFactor = 0;
-        //since its always going to be a square matrix, check using row for the scale factor
-        if(gridRowCount <= 5)
+        //set for the first 4 levels , then calculatee the others,
+        //this is to make the first set  of levels very  easy
+        int currentLvl = PlayerPrefs.GetInt(GamePrefabsNames.CURRENT_LEVEL, 1);
+        if(currentLvl <= 4)
         {
-            scaleFactor = Mathf.Clamp(MIN_BASE_TILESIZE_SCALE_FACTOR / gridSize, 0.8f, 2f);
-        }
-        else if(gridRowCount <= 10)
-        {
-            scaleFactor = Mathf.Clamp(MID_BASE_TILESIZE_SCALE_FACTOR / gridSize, 0.4f, 0.7f);
+            if (gridColCount <= 2)
+            {
+                tileSize = 1.7f;
+            }
+            else if (gridColCount <= 5)
+            {
+                tileSize = 1.0f;
+            }
+            else
+            {
+                Debug.LogError("Couldn't set the right tilesize based on existing conditions");
+            }
         }
         else
         {
-            scaleFactor = Mathf.Clamp(MAX_BASE_TILESIZE_SCALE_FACTOR / gridSize, 0.1f, 0.35f);
+            // Determine available space within tilesContainer
+            RectTransform tilesContainerRect = tilesContainer.GetComponent<RectTransform>();
+            Vector2 availableSpace = tilesContainerRect.rect.size - tilePadding; //* 2f;  // Subtract padding
+
+            // Calculate ideal tile size based on grid size and available space
+            int gridSize = gridColCount * gridRowCount;
+            float idealTileSize = Mathf.Min(availableSpace.x / gridColCount, availableSpace.y / gridRowCount);
+
+            // Apply scaling based on grid size, ensuring smooth transitions
+            float scaleFactor = Mathf.Max(0.6f, 1f - Mathf.Pow(gridSize / 40f, 2f));  // Adjusted exponent, values used are tested //DON'T CHANGE
+            tileSize = idealTileSize * scaleFactor;
         }
-        
-        tileSize *= scaleFactor;
+
     }
 
     private void ClearPreviousTiles()
@@ -165,25 +178,25 @@ public class GridItemsSpawner : MonoBehaviour
     {
         int totalTileCount = gridColCount * gridRowCount;
         int scoredTiles = 0;
-        foreach(Transform tileT in SpawnedTiles)
+        foreach (Transform tileT in SpawnedTiles)
         {
             if (!tileT.gameObject.activeSelf)
             {
                 //if isnt active means it was scored
                 scoredTiles++;
-                
+
             }
         }
         Debug.Log("Total scored tiles number: " + scoredTiles);
 
-       
-        currentSessionWon = GameModeManager.Instance.CheckGameWonOrLostState(scoredTiles, totalTileCount,out isCurrentWinBestScore );
+
+        currentSessionWon = GameModeManager.Instance.CheckGameWonOrLostState(scoredTiles, totalTileCount, out isCurrentWinBestScore);
         GameplayManager.Instance.gameSessionWon = currentSessionWon;
         GameplayManager.Instance.gameSessionLost = !currentSessionWon;
         //after updatating game state, call the respective events
         GameplayManager.Instance.InvokeLevelWonOrLostEvents();
     }
-   
+
     private void CheckGameStateOnAllTilesScored()
     {
         if (IsAllTilesScored())
@@ -206,7 +219,7 @@ public class GridItemsSpawner : MonoBehaviour
             Debug.Log("There was no child");
             return false;
         }
-            
+
 
         bool allTilesScored = true;
         foreach (Transform tileT in SpawnedTiles)
@@ -236,7 +249,7 @@ public class GridItemsSpawner : MonoBehaviour
         {
             //if this session was won, check the current game mode
 
-            if(GameModeManager.Instance.currentGameMode == GameModeManager.GamePlayMode.QuickRush)
+            if (GameModeManager.Instance.currentGameMode == GameModeManager.GamePlayMode.QuickRush)
             {
                 //if the game mode is the first mode, QuickRush, Load the same tile but change the gamemode, increase current level
                 Debug.Log("Changing the game mode to TimeLapse, but reloading the same tiles");
@@ -244,7 +257,7 @@ public class GridItemsSpawner : MonoBehaviour
                 ReloadSameTiles();
                 //then change the current GamePlayMode
                 GameModeManager.Instance.SwitchGameMode();
-                
+
             }
             else if (GameModeManager.Instance.currentGameMode == GameModeManager.GamePlayMode.TimeLapse)
             {
@@ -267,7 +280,7 @@ public class GridItemsSpawner : MonoBehaviour
     private void ReloadSameTiles()
     {
         //get the currentSpawned tiles and Re-activate them
-        foreach(Transform tileTransform in SpawnedTiles)
+        foreach (Transform tileTransform in SpawnedTiles)
         {
             tileTransform.gameObject.SetActive(true);
             Debug.Log("All tiles were reloaded, and set active");

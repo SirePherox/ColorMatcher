@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class GameModeManager : MonoBehaviour
 {
+
     [Header("Time Variables")]
     [SerializeField] private TimerManager timeManager;
 
